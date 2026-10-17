@@ -5,6 +5,9 @@
   "repository": "git@github.com:mscamargo/any-social.git",
   "author": "mscamargo <mscamargo.dev@gmail.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=16 <17"
+  },
   "scripts": {
     "dev": "nodemon server.js --ignore __tests__",
     "pretest": "NODE_ENV=test sequelize db:migrate",
