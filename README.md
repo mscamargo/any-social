@@ -1,4 +1,4 @@
-# nave-node-test
+# any-social
 Simple RESTful API similar to Twitter
 
 ## Running this project
