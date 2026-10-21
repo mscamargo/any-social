@@ -26,7 +26,7 @@ class UserController {
   }
 
   async update ({ params, body, auth }, response) {
-    if (auth.user.id !== params.id) {
+    if (auth.user.id !== Number(params.id)) {
       throw new ForbiddenError()
     }
 
@@ -42,7 +42,7 @@ class UserController {
   }
 
   async destroy ({ params, auth }, response) {
-    if (auth.user.id !== params.id) {
+    if (auth.user.id !== Number(params.id)) {
       throw new ForbiddenError()
     }
     const user = await User.findByPk(params.id)

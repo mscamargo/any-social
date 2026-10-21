@@ -24,12 +24,14 @@ module.exports = {
       return next(error)
     }
 
-    const errors = error.errors.map(({ messages, field }) => ({
-      messages,
-      field: field[0]
-    }))
+    const errors = Object.values(error.details)
+      .flat()
+      .map(({ message, path }) => ({
+        messages: [message],
+        field: path[0]
+      }))
 
-    return response.status(error.status).json({ errors })
+    return response.status(error.statusCode).json({ errors })
   },
 
   applicationErrors: (error, request, response, next) => {
