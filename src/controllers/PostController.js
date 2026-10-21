@@ -4,13 +4,13 @@ const ForbiddenError = require('../exceptions/ForbiddenError')
 
 class PostController {
   async index (_, response) {
-    const posts = await Post.findAll({ order: [['created_at', 'DESC']], include: ['owner'] })
+    const posts = await Post.findAll({ order: [['createdAt', 'DESC']], include: ['owner'] })
 
     return response.json(posts)
   }
 
   async store ({ body, auth }, response) {
-    const post = await Post.create({ ...body, user_id: auth.user.id })
+    const post = await Post.create({ ...body, userId: auth.user.id })
 
     return response.status(201).json(post)
   }
@@ -35,7 +35,7 @@ class PostController {
       throw new NotFoundError()
     }
 
-    if (auth.user.id !== post.user_id) {
+    if (auth.user.id !== post.userId) {
       throw new ForbiddenError()
     }
 
@@ -51,7 +51,7 @@ class PostController {
       throw new NotFoundError()
     }
 
-    if (auth.user.id !== post.user_id) {
+    if (auth.user.id !== post.userId) {
       throw new ForbiddenError()
     }
 

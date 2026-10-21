@@ -18,3 +18,19 @@ When `NODE_ENV=test`, the `.env` file is not loaded, so a `DB_STORAGE` set there
 
 ## Docs
 The documentation of this API can be accessed at https://navenodetest.docs.apiary.io/. This use the [API Blueprint](https://apiblueprint.org/) pattern.
+
+### Response format
+All JSON response keys are camelCase:
+
+- User: `id`, `username`, `email`, `title`, `createdAt`, `updatedAt` (`POST /login` adds `token`)
+- Post: `id`, `text`, `userId`, `createdAt`, `updatedAt` (`GET /posts` adds `owner`; `GET /posts/:id` adds `owner` and `comments`)
+- Comment: `id`, `text`, `postId`, `userId`, `createdAt`, `updatedAt` (`GET /posts/:post_id/comments` adds `owner`)
+
+IDs are always numbers. URL parameters such as `:post_id` are unchanged.
+
+### Breaking changes
+The response format changed in a way that breaks existing clients:
+
+- `user_id` is now `userId` and `post_id` is now `postId`.
+- Posts no longer include the duplicate `UserId` key, and comments no longer include the duplicate `PostId` key.
+- `POST /posts/:post_id/comments` returns `postId` as a number. It used to return `post_id` as a string (`"1"`).
