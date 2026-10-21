@@ -1,5 +1,5 @@
 const request = require('supertest')
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 
 const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
