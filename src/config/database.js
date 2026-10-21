@@ -1,7 +1,6 @@
 const env = require('./env')
 
 module.exports = {
-  url: env.DATABASE_URL,
   dialect: 'sqlite',
   storage: env.DB_STORAGE,
   operatorAliases: false,
