@@ -5,7 +5,7 @@ const jwt = require('../utils/jwt')
 class AuthenticationController {
   async store ({ body }, response) {
     const { email, password } = body
-    const user = await User.findOne({ where: { email } })
+    const user = await User.scope('withPassword').findOne({ where: { email } })
 
     if (!user) {
       throw new UnauthorizedError('E-mail not found')
