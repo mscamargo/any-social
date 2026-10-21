@@ -35,6 +35,7 @@ describe('Authentication Resource', () => {
       })
 
     expect(response.status).toEqual(401)
+    expect(response.body).toEqual({ message: 'Invalid password' })
   })
 
   it('should not be able to authenticate with nonexistent email', async () => {
@@ -43,5 +44,6 @@ describe('Authentication Resource', () => {
       .send({ email: 'nonexistent@email.com', password: 'passwd' })
 
     expect(response.status).toEqual(401)
+    expect(response.body).toEqual({ message: 'E-mail not found' })
   })
 })

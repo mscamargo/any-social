@@ -5,6 +5,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
+const { User } = require('../../src/models')
 
 describe('Users Resource', () => {
   beforeEach(async () => {
@@ -29,6 +30,62 @@ describe('Users Resource', () => {
       const response = await request(app).get('/users').send()
 
       expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Token not provided' })
+    })
+
+    it('should not be able to view all users with an invalid token', async () => {
+      const response = await request(app)
+        .get('/users')
+        .set('Authorization', 'Bearer invalidtoken')
+        .send()
+
+      expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Invalid or expired token' })
+    })
+
+    it('should not be able to view all users with a token of a deleted user', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+      await user.destroy()
+
+      const response = await request(app)
+        .get('/users')
+        .set('Authorization', `Bearer ${token}`)
+        .send()
+
+      expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Invalid credentials' })
+    })
+
+    it('should respond with 500 on unexpected errors', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+      const findAll = jest.spyOn(User, 'findAll').mockRejectedValueOnce(new Error('Unexpected'))
+
+      const response = await request(app)
+        .get('/users')
+        .set('Authorization', `Bearer ${token}`)
+        .send()
+
+      findAll.mockRestore()
+
+      expect(response.status).toEqual(500)
+    })
+
+    it('should not be able to view a nonexistent user', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+
+      const response = await request(app)
+        .get(`/users/${user.id + 1}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send()
+
+      expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'User not found' })
     })
 
     it('should be able to view other users account if authenticated', async () => {
@@ -64,6 +121,13 @@ describe('Users Resource', () => {
       const response = await request(app).post('/users').send({})
 
       expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [
+          { messages: ['"username" is required'], field: 'username' },
+          { messages: ['"email" is required'], field: 'email' },
+          { messages: ['"password" is required'], field: 'password' }
+        ]
+      })
     })
 
     it('should not be able to create a new user with an existing username', async () => {
@@ -76,6 +140,9 @@ describe('Users Resource', () => {
       })
 
       expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['Username is already in use'], field: 'username' }]
+      })
     })
 
     it('should not be able to create a new user with an existing email', async () => {
@@ -86,6 +153,18 @@ describe('Users Resource', () => {
         email,
         password: faker.internet.password()
       })
+
+      expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['E-mail is already in use'], field: 'email' }]
+      })
+    })
+
+    it('should not be able to create a user with a malformed JSON body', async () => {
+      const response = await request(app)
+        .post('/users')
+        .set('Content-Type', 'application/json')
+        .send('{"username":')
 
       expect(response.status).toEqual(400)
     })
@@ -123,6 +202,7 @@ describe('Users Resource', () => {
         })
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
 
     it('should not be able to update any account if not authenticated', async () => {
@@ -160,6 +240,7 @@ describe('Users Resource', () => {
         .send()
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
 
     it('should not be able to delete any account if not authenticated', async () => {

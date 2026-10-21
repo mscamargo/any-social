@@ -27,6 +27,7 @@ describe('Posts Resource', () => {
       const response = await request(app).get('/posts').send()
 
       expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Token not provided' })
     })
 
     it('should be in descending order of date', async () => {
@@ -60,6 +61,38 @@ describe('Posts Resource', () => {
         })
 
       expect(response.status).toEqual(201)
+    })
+
+    it('should not be able to create a post with invalid attributes', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+
+      const response = await request(app)
+        .post('/posts')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ text: 'a' })
+
+      expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['"text" length must be at least 2 characters long'], field: 'text' }]
+      })
+    })
+  })
+
+  describe('GET /posts/:id', () => {
+    it('should not be able to view a nonexistent post', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+
+      const response = await request(app)
+        .get('/posts/1')
+        .set('Authorization', `Bearer ${token}`)
+        .send()
+
+      expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'Resource not found' })
     })
   })
 
@@ -98,6 +131,7 @@ describe('Posts Resource', () => {
         })
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
   })
 
@@ -132,6 +166,7 @@ describe('Posts Resource', () => {
         .send()
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
   })
 })

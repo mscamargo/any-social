@@ -42,6 +42,7 @@ describe('Comments Resource', () => {
         .send()
 
       expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Token not provided' })
     })
   })
 
@@ -74,6 +75,7 @@ describe('Comments Resource', () => {
         .send({ text: faker.lorem.sentence() })
 
       expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'Post not found' })
     })
 
     it('should not be able to comment without text', async () => {
@@ -88,6 +90,9 @@ describe('Comments Resource', () => {
         .send({})
 
       expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['"text" is required'], field: 'text' }]
+      })
     })
 
     it('should not be able to comment with less than 2 characters', async () => {
@@ -102,6 +107,9 @@ describe('Comments Resource', () => {
         .send({ text: 'a' })
 
       expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['"text" length must be at least 2 characters long'], field: 'text' }]
+      })
     })
 
     it('should not be able to comment with more than 140 characters', async () => {
@@ -116,6 +124,9 @@ describe('Comments Resource', () => {
         .send({ text: 'a'.repeat(141) })
 
       expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['"text" length must be less than or equal to 140 characters long'], field: 'text' }]
+      })
     })
   })
 
@@ -154,6 +165,7 @@ describe('Comments Resource', () => {
         .send({ text: faker.lorem.sentence() })
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
 
     it('should not be able to update a comment that does not exist', async () => {
@@ -168,6 +180,7 @@ describe('Comments Resource', () => {
         .send({ text: faker.lorem.sentence() })
 
       expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'Resource not found' })
     })
 
     it('should not be able to update a comment through another post', async () => {
@@ -183,6 +196,7 @@ describe('Comments Resource', () => {
         .send({ text: faker.lorem.sentence() })
 
       expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'Resource not found' })
     })
   })
 
@@ -219,6 +233,7 @@ describe('Comments Resource', () => {
         .send()
 
       expect(response.status).toEqual(403)
+      expect(response.body).toEqual({ message: 'Not allowed' })
     })
 
     it('should not be able to delete a comment that does not exist', async () => {
@@ -233,6 +248,7 @@ describe('Comments Resource', () => {
         .send()
 
       expect(response.status).toEqual(404)
+      expect(response.body).toEqual({ message: 'Resource not found' })
     })
   })
 })
