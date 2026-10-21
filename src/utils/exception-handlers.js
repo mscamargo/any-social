@@ -34,7 +34,7 @@ module.exports = {
 
   applicationErrors: (error, request, response, next) => {
     if (!(error instanceof ApplicationError)) {
-      return next()
+      return next(error)
     }
 
     const { status, message, stack } = error

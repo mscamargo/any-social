@@ -13,7 +13,7 @@ module.exports = async (request, response, next) => {
     const [, token] = authHeader.split(' ')
 
     if (!jwt.verify(token)) {
-      throw new UnauthorizedError('Ivalid or expired token')
+      throw new UnauthorizedError('Invalid or expired token')
     }
 
     const { id } = jwt.decode(token)
