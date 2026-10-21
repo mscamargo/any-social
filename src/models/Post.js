@@ -4,8 +4,8 @@ module.exports = (sequelize, DataTypes) => {
   })
 
   Post.associate = models => {
-    Post.belongsTo(models.User, { as: 'owner', foreignKey: 'user_id' })
-    Post.hasMany(models.Comment, { as: 'comments' })
+    Post.belongsTo(models.User, { as: 'owner', foreignKey: 'userId' })
+    Post.hasMany(models.Comment, { as: 'comments', foreignKey: 'postId' })
   }
 
   return Post

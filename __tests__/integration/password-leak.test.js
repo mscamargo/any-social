@@ -30,8 +30,8 @@ describe('Password exposure', () => {
     await truncateTables()
 
     user = await factory.create('User', { password: 'secret123' })
-    post = await factory.create('Post', { user_id: user.id })
-    await Comment.create({ text: 'A comment', post_id: post.id, user_id: user.id })
+    post = await factory.create('Post', { userId: user.id })
+    await Comment.create({ text: 'A comment', postId: post.id, userId: user.id })
 
     token = jwt.generate(user)
   })

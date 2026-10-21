@@ -32,7 +32,7 @@ describe('Posts Resource', () => {
 
     it('should be in descending order of date', async () => {
       const user = await factory.create('User')
-      await factory.createMany('Post', 5, { user_id: user.id })
+      await factory.createMany('Post', 5, { userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -99,7 +99,7 @@ describe('Posts Resource', () => {
   describe('PUT /posts', () => {
     it('should be able to update your post', async () => {
       const user = await factory.create('User')
-      const post = await factory.create('Post', { user_id: user.id })
+      const post = await factory.create('Post', { userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -119,7 +119,7 @@ describe('Posts Resource', () => {
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { user_id: users[1].id })
+      const post = await factory.create('Post', { userId: users[1].id })
 
       const token = jwt.generate(users[0])
 
@@ -138,7 +138,7 @@ describe('Posts Resource', () => {
   describe('DELETE /posts', () => {
     it('should be able to delete your post', async () => {
       const user = await factory.create('User')
-      const post = await factory.create('Post', { user_id: user.id })
+      const post = await factory.create('Post', { userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -156,7 +156,7 @@ describe('Posts Resource', () => {
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { user_id: users[1].id })
+      const post = await factory.create('Post', { userId: users[1].id })
 
       const token = jwt.generate(users[0])
 
