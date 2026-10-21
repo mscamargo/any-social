@@ -18,6 +18,13 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: DataTypes.STRING,
     title: DataTypes.STRING
+  }, {
+    defaultScope: {
+      attributes: { exclude: ['password'] }
+    },
+    scopes: {
+      withPassword: {}
+    }
   })
 
   User.addHook('beforeSave', async user => {
