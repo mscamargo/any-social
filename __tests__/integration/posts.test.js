@@ -32,7 +32,11 @@ describe('Posts Resource', () => {
 
     it('should be in descending order of date', async () => {
       const user = await factory.create('User')
-      await factory.createMany('Post', 5, { userId: user.id })
+      // Inserted oldest first, so insertion order is the opposite of the expected order
+      const posts = await factory.createMany('Post', 5, [0, 1, 2, 3, 4].map(day => ({
+        userId: user.id,
+        createdAt: new Date(Date.UTC(2020, 0, day + 1))
+      })))
 
       const token = jwt.generate(user)
 
@@ -41,9 +45,7 @@ describe('Posts Resource', () => {
         .set('Authorization', `Bearer ${token}`)
         .send()
 
-      const dates = body.map(post => new Date(post.createdAt))
-
-      expect(dates[0].getTime()).toBeLessThanOrEqual(dates[0].getTime())
+      expect(body.map(post => post.id)).toEqual(posts.map(post => post.id).reverse())
     })
   })
 
