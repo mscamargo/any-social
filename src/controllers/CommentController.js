@@ -36,7 +36,7 @@ class CommentController {
       throw new ForbiddenError()
     }
 
-    await comment.update(body)
+    await comment.update({ text: body.text })
 
     return response.json(comment)
   }

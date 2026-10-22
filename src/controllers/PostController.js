@@ -39,7 +39,7 @@ class PostController {
       throw new ForbiddenError()
     }
 
-    await post.update(body)
+    await post.update({ text: body.text })
 
     return response.json(post)
   }

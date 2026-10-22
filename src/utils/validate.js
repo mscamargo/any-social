@@ -1,6 +1,11 @@
 const { validate } = require('express-validation')
 
-// Keep the express-validation 1.x defaults: report every error, not just the
-// first, and let unknown keys through (e.g. :post_id on comment routes)
-module.exports = schema =>
-  validate(schema, {}, { abortEarly: false, allowUnknown: true })
+// Report every error, not just the first (the express-validation 1.x default).
+// Unknown body keys are rejected, but params may carry keys a schema doesn't
+// list (e.g. :post_id on comment routes)
+module.exports = ({ params, ...schema }) =>
+  validate(
+    params ? { ...schema, params: params.unknown() } : schema,
+    {},
+    { abortEarly: false }
+  )

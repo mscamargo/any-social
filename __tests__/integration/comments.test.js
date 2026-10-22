@@ -197,6 +197,38 @@ describe('Comments Resource', () => {
       expect(response.status).toEqual(404)
       expect(response.body).toEqual({ message: 'Resource not found' })
     })
+
+    it('should not be able to change the owner or the post of your comment', async () => {
+      const users = await factory.createMany('User', 2, [
+        { username: 'user0', email: 'user0@email.com' },
+        { username: 'user1', email: 'user1@email.com' }
+      ])
+      const posts = await factory.createMany('Post', 2, { userId: users[1].id })
+      const comment = await factory.create('Comment', { postId: posts[0].id, userId: users[0].id })
+
+      const token = jwt.generate(users[0])
+
+      const response = await request(app)
+        .put(`/posts/${posts[0].id}/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          text: faker.lorem.sentence(),
+          userId: users[1].id,
+          postId: posts[1].id
+        })
+
+      expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [
+          { messages: ['"userId" is not allowed'], field: 'userId' },
+          { messages: ['"postId" is not allowed'], field: 'postId' }
+        ]
+      })
+
+      await comment.reload()
+      expect(comment.userId).toEqual(users[0].id)
+      expect(comment.postId).toEqual(posts[0].id)
+    })
   })
 
   describe('DELETE /posts/:post_id/comments/:id', () => {
