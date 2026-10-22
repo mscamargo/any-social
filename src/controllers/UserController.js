@@ -36,7 +36,9 @@ class UserController {
       throw new UserNotFoundError()
     }
 
-    await user.update(body)
+    const { username, email, password, title } = body
+
+    await user.update({ username, email, password, title })
 
     return response.json(user)
   }

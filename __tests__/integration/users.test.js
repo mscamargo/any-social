@@ -220,6 +220,34 @@ describe('Users Resource', () => {
       expect(response.body).toEqual({ message: 'Not allowed' })
     })
 
+    it('should not be able to change the id or timestamps of your account', async () => {
+      const user = await factory.create('User')
+
+      const token = jwt.generate(user)
+
+      const response = await request(app)
+        .put(`/users/${user.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          username: faker.internet.userName(),
+          id: user.id + 1,
+          createdAt: '2000-01-01T00:00:00.000Z'
+        })
+
+      expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [
+          { messages: ['"id" is not allowed'], field: 'id' },
+          { messages: ['"createdAt" is not allowed'], field: 'createdAt' }
+        ]
+      })
+
+      const stored = await User.findByPk(user.id)
+      expect(stored).not.toBeNull()
+      expect(stored.createdAt).toEqual(user.createdAt)
+      expect(await User.findByPk(user.id + 1)).toBeNull()
+    })
+
     it('should not be able to update any account if not authenticated', async () => {
       const response = await request(app).put('/users/1').send()
 
