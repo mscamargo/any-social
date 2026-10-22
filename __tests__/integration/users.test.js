@@ -1,4 +1,4 @@
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 const jsonwebtoken = require('jsonwebtoken')
 const request = require('supertest')
 
@@ -125,7 +125,7 @@ describe('Users Resource', () => {
       const response = await request(app).post('/users').send({
         username: faker.internet.userName(),
         email: faker.internet.email(),
-        title: faker.name.findName(),
+        title: faker.person.fullName(),
         password: faker.internet.password()
       })
 
