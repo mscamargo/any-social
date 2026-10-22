@@ -1,4 +1,5 @@
 const faker = require('faker')
+const jsonwebtoken = require('jsonwebtoken')
 const request = require('supertest')
 
 const app = require('../../src/app')
@@ -37,6 +38,20 @@ describe('Users Resource', () => {
       const response = await request(app)
         .get('/users')
         .set('Authorization', 'Bearer invalidtoken')
+        .send()
+
+      expect(response.status).toEqual(401)
+      expect(response.body).toEqual({ message: 'Invalid or expired token' })
+    })
+
+    it('should not be able to view all users with a token signed with a different secret', async () => {
+      const user = await factory.create('User')
+
+      const token = jsonwebtoken.sign({ id: user.id }, 'another_secret', { expiresIn: 86400 })
+
+      const response = await request(app)
+        .get('/users')
+        .set('Authorization', `Bearer ${token}`)
         .send()
 
       expect(response.status).toEqual(401)
