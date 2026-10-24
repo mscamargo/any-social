@@ -1,7 +1,10 @@
-const { sequelize } = require('../../src/models')
+const knex = require('../../src/database/connection')
 
-module.exports = () => {
-  return Promise.all(Object.keys(sequelize.models).map(key => {
-    return sequelize.models[key].destroy({ truncate: true, force: true })
-  }))
+// Children before parents, so no delete trips a foreign key.
+const TABLES = ['comments', 'posts', 'users']
+
+module.exports = async () => {
+  for (const table of TABLES) {
+    await knex(table).del()
+  }
 }

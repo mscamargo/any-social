@@ -1,50 +1,21 @@
-module.exports = {
-  up: (queryInterface, Sequelize) =>
-    queryInterface.createTable('comments', {
-      id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
+exports.up = knex =>
+  knex.schema.createTable('comments', table => {
+    table.increments('id')
+    table.string('text', 140).notNullable()
+    table
+      .integer('post_id')
+      .notNullable()
+      .references('id')
+      .inTable('posts')
+      .onDelete('CASCADE')
+    table
+      .integer('user_id')
+      .notNullable()
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE')
+    table.datetime('created_at').notNullable()
+    table.datetime('updated_at').notNullable()
+  })
 
-      text: {
-        allowNull: false,
-        type: Sequelize.STRING(140)
-      },
-
-      post_id: {
-        allowNull: false,
-        onDelete: 'CASCADE',
-        type: Sequelize.INTEGER,
-
-        references: {
-          model: 'posts',
-          key: 'id'
-        }
-      },
-
-      user_id: {
-        allowNull: false,
-        onDelete: 'CASCADE',
-        type: Sequelize.INTEGER,
-
-        references: {
-          model: 'users',
-          key: 'id'
-        }
-      },
-
-      created_at: {
-        allowNull: false,
-        type: Sequelize.DATE
-      },
-
-      updated_at: {
-        allowNull: false,
-        type: Sequelize.DATE
-      }
-    }),
-
-  down: queryInterface => queryInterface.dropTable('comments')
-}
+exports.down = knex => knex.schema.dropTable('comments')
