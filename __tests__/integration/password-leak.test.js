@@ -4,7 +4,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
-const { Comment } = require('../../src/models')
+const CommentRepository = require('../../src/repositories/CommentRepository')
 
 const findPasswordPaths = (value, path = 'body') => {
   if (Array.isArray(value)) {
@@ -31,7 +31,7 @@ describe('Password exposure', () => {
 
     user = await factory.create('User', { password: 'secret123' })
     post = await factory.create('Post', { userId: user.id })
-    await Comment.create({ text: 'A comment', postId: post.id, userId: user.id })
+    await CommentRepository.create({ text: 'A comment', postId: post.id, userId: user.id })
 
     token = jwt.generate(user)
   })

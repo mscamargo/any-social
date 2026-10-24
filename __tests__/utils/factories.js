@@ -1,7 +1,8 @@
 const { faker } = require('@faker-js/faker')
 const { factory, ObjectAdapter } = require('factory-girl')
-const { Post, Comment } = require('../../src/models')
+const { Post } = require('../../src/models')
 const UserRepository = require('../../src/repositories/UserRepository')
+const CommentRepository = require('../../src/repositories/CommentRepository')
 
 // Builds plain objects and saves them through a repository, so factories go
 // through the same code as the app (e.g. password hashing in create).
@@ -21,7 +22,7 @@ class RepositoryAdapter extends ObjectAdapter {
   }
 }
 
-factory.setAdapter(new RepositoryAdapter(), 'User')
+factory.setAdapter(new RepositoryAdapter(), ['User', 'Comment'])
 
 factory.define('User', UserRepository, {
   username: () => faker.internet.userName(),
@@ -34,7 +35,7 @@ factory.define('Post', Post, {
   text: () => faker.lorem.sentence()
 })
 
-factory.define('Comment', Comment, {
+factory.define('Comment', CommentRepository, {
   text: () => faker.lorem.sentence()
 })
 
