@@ -12,7 +12,7 @@ module.exports = {
   },
   pool: {
     // SQLite leaves foreign keys off per connection; without this,
-    // ON DELETE CASCADE does nothing. Sequelize turns it on by itself.
+    // ON DELETE CASCADE does nothing.
     afterCreate: (connection, done) => {
       connection.run('PRAGMA foreign_keys = ON', done)
     }
