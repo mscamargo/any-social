@@ -2,6 +2,8 @@
 Simple RESTful API similar to Twitter
 
 ## Running this project
+This project requires Node.js 24 or newer. The version is pinned in `.tool-versions`, so with [mise](https://mise.jdx.dev/) installed, run `mise install` in the project folder to get it.
+
 1. Clone this repository
 2. Install dependencies with `npm install`
 3. This project uses SQLite as its development and test database. The dev server stores data in `database.sqlite`; set `DB_STORAGE` to use a different file.
