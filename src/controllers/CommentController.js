@@ -1,4 +1,4 @@
-const { Post } = require('../models')
+const PostRepository = require('../repositories/PostRepository')
 const CommentRepository = require('../repositories/CommentRepository')
 const CommentSerializer = require('../serializers/CommentSerializer')
 const NotFoundError = require('../exceptions/NotFoundError')
@@ -22,7 +22,7 @@ class CommentController {
   }
 
   async store ({ params, body, auth }, response) {
-    const post = await Post.findByPk(params.post_id)
+    const post = await PostRepository.findById(params.post_id)
 
     if (!post) {
       throw new NotFoundError('Post not found')

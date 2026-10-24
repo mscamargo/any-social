@@ -1,5 +1,5 @@
-// Comments are read and written through CommentRepository. This model is only
-// left so Post can include its comments until posts move to Knex too.
+// Unused: every resource goes through a Knex repository now. Removed with the
+// rest of src/models in the last step of #27.
 module.exports = (sequelize, DataTypes) => {
   const Comment = sequelize.define('Comment', {
     text: DataTypes.STRING

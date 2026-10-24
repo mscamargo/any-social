@@ -1,7 +1,7 @@
 const { faker } = require('@faker-js/faker')
 const { factory, ObjectAdapter } = require('factory-girl')
-const { Post } = require('../../src/models')
 const UserRepository = require('../../src/repositories/UserRepository')
+const PostRepository = require('../../src/repositories/PostRepository')
 const CommentRepository = require('../../src/repositories/CommentRepository')
 
 // Builds plain objects and saves them through a repository, so factories go
@@ -22,7 +22,7 @@ class RepositoryAdapter extends ObjectAdapter {
   }
 }
 
-factory.setAdapter(new RepositoryAdapter(), ['User', 'Comment'])
+factory.setAdapter(new RepositoryAdapter(), ['User', 'Post', 'Comment'])
 
 factory.define('User', UserRepository, {
   username: () => faker.internet.userName(),
@@ -31,7 +31,7 @@ factory.define('User', UserRepository, {
   title: () => faker.person.fullName()
 })
 
-factory.define('Post', Post, {
+factory.define('Post', PostRepository, {
   text: () => faker.lorem.sentence()
 })
 

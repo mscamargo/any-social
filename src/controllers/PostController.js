@@ -1,35 +1,33 @@
-const { Post } = require('../models')
+const PostRepository = require('../repositories/PostRepository')
+const PostSerializer = require('../serializers/PostSerializer')
 const NotFoundError = require('../exceptions/NotFoundError')
 const ForbiddenError = require('../exceptions/ForbiddenError')
 
 class PostController {
   async index (_, response) {
-    const posts = await Post.findAll({ order: [['createdAt', 'DESC']], include: ['owner'] })
+    const posts = await PostRepository.list()
 
-    return response.json(posts)
+    return response.json(posts.map(PostSerializer.serialize))
   }
 
   async store ({ body, auth }, response) {
-    const post = await Post.create({ ...body, userId: auth.user.id })
+    const post = await PostRepository.create({ text: body.text, userId: auth.user.id })
 
-    return response.status(201).json(post)
+    return response.status(201).json(PostSerializer.serialize(post))
   }
 
   async show ({ params }, response) {
-    const post = await Post.findOne({
-      where: { id: params.id },
-      include: ['owner', 'comments']
-    })
+    const post = await PostRepository.findByIdWithOwnerAndComments(params.id)
 
     if (!post) {
       throw new NotFoundError()
     }
 
-    return response.json(post)
+    return response.json(PostSerializer.serialize(post))
   }
 
   async update ({ params, body, auth }, response) {
-    const post = await Post.findByPk(params.id)
+    const post = await PostRepository.findById(params.id)
 
     if (!post) {
       throw new NotFoundError()
@@ -39,13 +37,13 @@ class PostController {
       throw new ForbiddenError()
     }
 
-    await post.update({ text: body.text })
+    const updated = await PostRepository.update(post.id, { text: body.text })
 
-    return response.json(post)
+    return response.json(PostSerializer.serialize(updated))
   }
 
   async destroy ({ params, auth }, response) {
-    const post = await Post.findByPk(params.id)
+    const post = await PostRepository.findById(params.id)
 
     if (!post) {
       throw new NotFoundError()
@@ -55,7 +53,7 @@ class PostController {
       throw new ForbiddenError()
     }
 
-    await post.destroy()
+    await PostRepository.remove(post.id)
 
     return response.status(204).json()
   }
