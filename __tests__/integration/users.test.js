@@ -6,7 +6,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
-const { User } = require('../../src/models')
+const UserRepository = require('../../src/repositories/UserRepository')
 
 describe('Users Resource', () => {
   beforeEach(async () => {
@@ -62,7 +62,7 @@ describe('Users Resource', () => {
       const user = await factory.create('User')
 
       const token = jwt.generate(user)
-      await user.destroy()
+      await UserRepository.remove(user.id)
 
       const response = await request(app)
         .get('/users')
@@ -77,14 +77,14 @@ describe('Users Resource', () => {
       const user = await factory.create('User')
 
       const token = jwt.generate(user)
-      const findAll = jest.spyOn(User, 'findAll').mockRejectedValueOnce(new Error('Unexpected'))
+      const list = jest.spyOn(UserRepository, 'list').mockRejectedValueOnce(new Error('Unexpected'))
 
       const response = await request(app)
         .get('/users')
         .set('Authorization', `Bearer ${token}`)
         .send()
 
-      findAll.mockRestore()
+      list.mockRestore()
 
       expect(response.status).toEqual(500)
     })
@@ -242,10 +242,10 @@ describe('Users Resource', () => {
         ]
       })
 
-      const stored = await User.findByPk(user.id)
+      const stored = await UserRepository.findById(user.id)
       expect(stored).not.toBeNull()
       expect(stored.createdAt).toEqual(user.createdAt)
-      expect(await User.findByPk(user.id + 1)).toBeNull()
+      expect(await UserRepository.findById(user.id + 1)).toBeNull()
     })
 
     it('should not be able to update any account if not authenticated', async () => {

@@ -1,21 +1,23 @@
-const { User } = require('../models')
+const UserRepository = require('../repositories/UserRepository')
+const UserSerializer = require('../serializers/UserSerializer')
 const UnauthorizedError = require('../exceptions/UnauthorizedError')
+const { compare } = require('../utils/password')
 const jwt = require('../utils/jwt')
 
 class AuthenticationController {
   async store ({ body }, response) {
     const { email, password } = body
-    const user = await User.scope('withPassword').findOne({ where: { email } })
+    const user = await UserRepository.findByEmail(email)
 
     if (!user) {
       throw new UnauthorizedError('E-mail not found')
     }
 
-    if (!(await user.comparePasswordHash(password))) {
+    if (!(await compare(password, user.password))) {
       throw new UnauthorizedError('Invalid password')
     }
 
-    return response.json({ ...user.toJSON(), token: jwt.generate(user) })
+    return response.json({ ...UserSerializer.serialize(user), token: jwt.generate(user) })
   }
 }
 

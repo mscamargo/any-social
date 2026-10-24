@@ -1,28 +1,29 @@
-const { User } = require('../models')
+const UserRepository = require('../repositories/UserRepository')
+const UserSerializer = require('../serializers/UserSerializer')
 const UserNotFoundError = require('../exceptions/UserNotFoundError')
 const ForbiddenError = require('../exceptions/ForbiddenError')
 
 class UserController {
   async index (_, response) {
-    const users = await User.findAll()
+    const users = await UserRepository.list()
 
-    return response.json(users)
+    return response.json(users.map(UserSerializer.serialize))
   }
 
   async store ({ body }, response) {
-    const user = await User.create(body)
+    const user = await UserRepository.create(body)
 
-    return response.status(201).json(user)
+    return response.status(201).json(UserSerializer.serialize(user))
   }
 
   async show ({ params }, response) {
-    const user = await User.findByPk(params.id)
+    const user = await UserRepository.findById(params.id)
 
     if (!user) {
       throw new UserNotFoundError()
     }
 
-    return response.json(user)
+    return response.json(UserSerializer.serialize(user))
   }
 
   async update ({ params, body, auth }, response) {
@@ -30,7 +31,7 @@ class UserController {
       throw new ForbiddenError()
     }
 
-    const user = await User.findByPk(params.id)
+    const user = await UserRepository.findById(params.id)
 
     if (!user) {
       throw new UserNotFoundError()
@@ -38,22 +39,22 @@ class UserController {
 
     const { username, email, password, title } = body
 
-    await user.update({ username, email, password, title })
+    const updated = await UserRepository.update(user.id, { username, email, password, title })
 
-    return response.json(user)
+    return response.json(UserSerializer.serialize(updated))
   }
 
   async destroy ({ params, auth }, response) {
     if (auth.user.id !== Number(params.id)) {
       throw new ForbiddenError()
     }
-    const user = await User.findByPk(params.id)
+    const user = await UserRepository.findById(params.id)
 
     if (!user) {
       throw new UserNotFoundError()
     }
 
-    await user.destroy()
+    await UserRepository.remove(user.id)
 
     return response.status(204).json()
   }

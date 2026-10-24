@@ -1,6 +1,6 @@
 const UnauthorizedError = require('../exceptions/UnauthorizedError')
 const jwt = require('../utils/jwt')
-const { User } = require('../models')
+const UserRepository = require('../repositories/UserRepository')
 
 module.exports = async (request, response, next) => {
   const authHeader = request.headers.authorization
@@ -17,7 +17,7 @@ module.exports = async (request, response, next) => {
     }
 
     const { id } = jwt.decode(token)
-    const user = await User.findByPk(id)
+    const user = await UserRepository.findById(id)
 
     if (!user) {
       throw new UnauthorizedError()
