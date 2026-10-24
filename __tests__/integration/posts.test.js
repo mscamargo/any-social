@@ -5,6 +5,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
+const { Post } = require('../../src/models')
 
 describe('Posts Resource', () => {
   beforeEach(async () => {
@@ -134,6 +135,52 @@ describe('Posts Resource', () => {
 
       expect(response.status).toEqual(403)
       expect(response.body).toEqual({ message: 'Not allowed' })
+    })
+
+    it('should not be able to change the owner of your post', async () => {
+      const users = await factory.createMany('User', 2, [
+        { username: 'user0', email: 'user0@email.com' },
+        { username: 'user1', email: 'user1@email.com' }
+      ])
+
+      const post = await factory.create('Post', { userId: users[0].id })
+
+      const token = jwt.generate(users[0])
+
+      const response = await request(app)
+        .put(`/posts/${post.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          text: faker.lorem.sentence(),
+          userId: users[1].id
+        })
+
+      expect(response.status).toEqual(400)
+      expect(response.body).toEqual({
+        errors: [{ messages: ['"userId" is not allowed'], field: 'userId' }]
+      })
+
+      await post.reload()
+      expect(post.userId).toEqual(users[0].id)
+    })
+
+    it('should not be able to change the id of your post', async () => {
+      const user = await factory.create('User')
+      const post = await factory.create('Post', { userId: user.id })
+
+      const token = jwt.generate(user)
+
+      const response = await request(app)
+        .put(`/posts/${post.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          text: faker.lorem.sentence(),
+          id: post.id + 1
+        })
+
+      expect(response.status).toEqual(400)
+      expect(await Post.findByPk(post.id)).not.toBeNull()
+      expect(await Post.findByPk(post.id + 1)).toBeNull()
     })
   })
 
