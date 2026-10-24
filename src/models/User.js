@@ -1,5 +1,5 @@
-// Users are read and written through UserRepository. This model is only left
-// so Post and Comment can include their owner until they move to Knex too.
+// Unused: every resource goes through a Knex repository now. Removed with the
+// rest of src/models in the last step of #27.
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
     username: DataTypes.STRING,

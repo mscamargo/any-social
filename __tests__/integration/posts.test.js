@@ -5,7 +5,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
-const { Post } = require('../../src/models')
+const PostRepository = require('../../src/repositories/PostRepository')
 
 describe('Posts Resource', () => {
   beforeEach(async () => {
@@ -160,8 +160,8 @@ describe('Posts Resource', () => {
         errors: [{ messages: ['"userId" is not allowed'], field: 'userId' }]
       })
 
-      await post.reload()
-      expect(post.userId).toEqual(users[0].id)
+      const stored = await PostRepository.findById(post.id)
+      expect(stored.userId).toEqual(users[0].id)
     })
 
     it('should not be able to change the id of your post', async () => {
@@ -179,8 +179,8 @@ describe('Posts Resource', () => {
         })
 
       expect(response.status).toEqual(400)
-      expect(await Post.findByPk(post.id)).not.toBeNull()
-      expect(await Post.findByPk(post.id + 1)).toBeNull()
+      expect(await PostRepository.findById(post.id)).not.toBeNull()
+      expect(await PostRepository.findById(post.id + 1)).toBeNull()
     })
   })
 

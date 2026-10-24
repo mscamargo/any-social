@@ -19,9 +19,16 @@ class CommentRepository {
     return toComment(await knex('comments').where({ id }).first())
   }
 
-  // Each comment comes with its owner, loaded in one extra query.
+  async findByPost (postId) {
+    const rows = await knex('comments').where({ post_id: postId }).orderBy('id')
+
+    return rows.map(toComment)
+  }
+
+  // Same as findByPost, but each comment comes with its owner, loaded in one
+  // extra query.
   async listByPost (postId) {
-    const comments = (await knex('comments').where({ post_id: postId }).orderBy('id')).map(toComment)
+    const comments = await this.findByPost(postId)
 
     const owners = await UserRepository.findByIds([...new Set(comments.map(({ userId }) => userId))])
     const ownersById = new Map(owners.map(owner => [owner.id, owner]))
