@@ -4,22 +4,6 @@ const ApplicationError = require('../exceptions/ApplicationError')
 const UniqueConstraintError = require('../exceptions/UniqueConstraintError')
 
 module.exports = {
-  sequelizeValidationErrorHandler: (error, request, response, next) => {
-    if (
-      error.name !== 'SequelizeValidationError' &&
-      error.name !== 'SequelizeUniqueConstraintError'
-    ) {
-      return next(error)
-    }
-
-    const errors = error.errors.map(({ message, path }) => ({
-      messages: [message],
-      field: path
-    }))
-
-    return response.status(400).json({ errors })
-  },
-
   uniqueConstraintErrorHandler: (error, request, response, next) => {
     if (!(error instanceof UniqueConstraintError)) {
       return next(error)
