@@ -40,6 +40,12 @@ class UserRepository {
     return toUser(await knex('users').where({ email }).first())
   }
 
+  async findByIds (ids) {
+    const rows = await knex('users').whereIn('id', ids)
+
+    return rows.map(toUser)
+  }
+
   async list () {
     const rows = await knex('users').orderBy('id')
 

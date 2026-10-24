@@ -5,6 +5,7 @@ const app = require('../../src/app')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
+const CommentRepository = require('../../src/repositories/CommentRepository')
 
 describe('Comments Resource', () => {
   beforeEach(async () => {
@@ -225,9 +226,9 @@ describe('Comments Resource', () => {
         ]
       })
 
-      await comment.reload()
-      expect(comment.userId).toEqual(users[0].id)
-      expect(comment.postId).toEqual(posts[0].id)
+      const stored = await CommentRepository.findById(comment.id)
+      expect(stored.userId).toEqual(users[0].id)
+      expect(stored.postId).toEqual(posts[0].id)
     })
   })
 
