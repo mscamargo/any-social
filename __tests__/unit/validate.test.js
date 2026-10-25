@@ -21,7 +21,9 @@ const userSchema = {
 const run = (schema, { params = {}, body = {} }) => {
   let result
 
-  validate(schema)({ params, body }, {}, error => { result = error })
+  validate(schema)({ params, body }, {}, error => {
+    result = error
+  })
 
   if (result === undefined) return undefined
 

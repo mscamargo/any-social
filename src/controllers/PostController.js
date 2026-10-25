@@ -4,19 +4,19 @@ import NotFoundError from '../exceptions/NotFoundError.js'
 import ForbiddenError from '../exceptions/ForbiddenError.js'
 
 class PostController {
-  async index (_, response) {
+  async index(_, response) {
     const posts = await PostRepository.list()
 
     return response.json(posts.map(PostSerializer.serialize))
   }
 
-  async store ({ body, auth }, response) {
+  async store({ body, auth }, response) {
     const post = await PostRepository.create({ text: body.text, userId: auth.user.id })
 
     return response.status(201).json(PostSerializer.serialize(post))
   }
 
-  async show ({ params }, response) {
+  async show({ params }, response) {
     const post = await PostRepository.findByIdWithOwnerAndComments(params.id)
 
     if (!post) {
@@ -26,7 +26,7 @@ class PostController {
     return response.json(PostSerializer.serialize(post))
   }
 
-  async update ({ params, body, auth }, response) {
+  async update({ params, body, auth }, response) {
     const post = await PostRepository.findById(params.id)
 
     if (!post) {
@@ -42,7 +42,7 @@ class PostController {
     return response.json(PostSerializer.serialize(updated))
   }
 
-  async destroy ({ params, auth }, response) {
+  async destroy({ params, auth }, response) {
     const post = await PostRepository.findById(params.id)
 
     if (!post) {

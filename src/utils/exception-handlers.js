@@ -43,8 +43,4 @@ const applicationErrors = (error, request, response, next) => {
 // Registered in this order. UniqueConstraintError and ValidationError extend
 // ApplicationError, so applicationErrors must come last or it would answer
 // for them with { message } instead of { errors }.
-export default [
-  uniqueConstraintErrorHandler,
-  schemaValidationErrorHandler,
-  applicationErrors
-]
+export default [uniqueConstraintErrorHandler, schemaValidationErrorHandler, applicationErrors]

@@ -17,9 +17,9 @@ const typed = value => {
   if (Array.isArray(value)) return value.map(typed)
   if (!value || typeof value !== 'object') return value
 
-  return Object.fromEntries(Object.entries(value).map(([key, field]) =>
-    [key, key in timestamps ? typeof field : typed(field)]
-  ))
+  return Object.fromEntries(
+    Object.entries(value).map(([key, field]) => [key, key in timestamps ? typeof field : typed(field)])
+  )
 }
 
 // Asserts that a created resource got a numeric id and returns the rest.
@@ -153,10 +153,13 @@ describe('Response contract', () => {
       const response = await send('GET', `/posts/${post.id}`)
 
       assert.strictEqual(response.status, 200)
-      assert.deepStrictEqual(typed(response.body), postShape(post, {
-        owner: userShape(user),
-        comments: [commentShape(comment)]
-      }))
+      assert.deepStrictEqual(
+        typed(response.body),
+        postShape(post, {
+          owner: userShape(user),
+          comments: [commentShape(comment)]
+        })
+      )
     })
 
     it('PUT /posts/:id', async () => {

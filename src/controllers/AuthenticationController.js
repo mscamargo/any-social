@@ -5,7 +5,7 @@ import { compare } from '../utils/password.js'
 import * as jwt from '../utils/jwt.js'
 
 class AuthenticationController {
-  async store ({ body }, response) {
+  async store({ body }, response) {
     const { email, password } = body
     const user = await UserRepository.findByEmail(email)
 

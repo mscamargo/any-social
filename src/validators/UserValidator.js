@@ -1,7 +1,7 @@
 import validate from '../utils/validate.js'
 
 class UserValidator {
-  store () {
+  store() {
     return validate({
       body: {
         username: { type: 'string', required: true, min: 2 },
@@ -12,7 +12,7 @@ class UserValidator {
     })
   }
 
-  update () {
+  update() {
     return validate({
       params: {
         id: { type: 'number', required: true }
@@ -26,7 +26,7 @@ class UserValidator {
     })
   }
 
-  delete () {
+  delete() {
     return validate({
       params: {
         id: { type: 'number', required: true }

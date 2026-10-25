@@ -45,7 +45,9 @@ const adoptKnexHistory = () => {
   transaction(() => {
     const insert = db.prepare('INSERT OR IGNORE INTO migrations (name, applied_at) VALUES (?, ?)')
 
-    for (const { name, migration_time: appliedAt } of db.prepare('SELECT name, migration_time FROM knex_migrations ORDER BY id').all()) {
+    for (const { name, migration_time: appliedAt } of db
+      .prepare('SELECT name, migration_time FROM knex_migrations ORDER BY id')
+      .all()) {
       insert.run(path.parse(name).name, new Date(appliedAt).toISOString())
     }
 
@@ -55,11 +57,18 @@ const adoptKnexHistory = () => {
 }
 
 const migrate = () => {
-  db.exec('CREATE TABLE IF NOT EXISTS migrations (name varchar(255) NOT NULL PRIMARY KEY, applied_at datetime NOT NULL)')
+  db.exec(
+    'CREATE TABLE IF NOT EXISTS migrations (name varchar(255) NOT NULL PRIMARY KEY, applied_at datetime NOT NULL)'
+  )
 
   adoptKnexHistory()
 
-  const applied = new Set(db.prepare('SELECT name FROM migrations').all().map(({ name }) => name))
+  const applied = new Set(
+    db
+      .prepare('SELECT name FROM migrations')
+      .all()
+      .map(({ name }) => name)
+  )
   const pending = fs
     .readdirSync(MIGRATIONS_DIR)
     .filter(file => file.endsWith('.sql'))

@@ -15,11 +15,11 @@ const toComment = row =>
     : null
 
 class CommentRepository {
-  async findById (id) {
+  async findById(id) {
     return toComment(db.prepare('SELECT * FROM comments WHERE id = ?').get(id))
   }
 
-  async findByPost (postId) {
+  async findByPost(postId) {
     const rows = db.prepare('SELECT * FROM comments WHERE post_id = ? ORDER BY id').all(postId)
 
     return rows.map(toComment)
@@ -27,7 +27,7 @@ class CommentRepository {
 
   // Same as findByPost, but each comment comes with its owner, loaded in one
   // extra query.
-  async listByPost (postId) {
+  async listByPost(postId) {
     const comments = await this.findByPost(postId)
 
     const owners = await UserRepository.findByIds([...new Set(comments.map(({ userId }) => userId))])
@@ -36,7 +36,7 @@ class CommentRepository {
     return comments.map(comment => ({ ...comment, owner: ownersById.get(comment.userId) }))
   }
 
-  async create ({ text, postId, userId }) {
+  async create({ text, postId, userId }) {
     const now = timestamp()
 
     const row = db
@@ -50,7 +50,7 @@ class CommentRepository {
     return toComment(row)
   }
 
-  async update (id, { text }) {
+  async update(id, { text }) {
     const row = db
       .prepare('UPDATE comments SET text = ?, updated_at = ? WHERE id = ? RETURNING *')
       .get(text, timestamp(), id)
@@ -58,7 +58,7 @@ class CommentRepository {
     return toComment(row)
   }
 
-  async remove (id) {
+  async remove(id) {
     return db.prepare('DELETE FROM comments WHERE id = ?').run(id).changes
   }
 }

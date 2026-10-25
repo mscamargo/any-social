@@ -15,13 +15,13 @@ const findCommentOfPost = async ({ id, post_id: postId }) => {
 }
 
 class CommentController {
-  async index ({ params }, response) {
+  async index({ params }, response) {
     const comments = await CommentRepository.listByPost(params.post_id)
 
     return response.json(comments.map(CommentSerializer.serialize))
   }
 
-  async store ({ params, body, auth }, response) {
+  async store({ params, body, auth }, response) {
     const post = await PostRepository.findById(params.post_id)
 
     if (!post) {
@@ -37,7 +37,7 @@ class CommentController {
     return response.status(201).json(CommentSerializer.serialize(comment))
   }
 
-  async update ({ params, body, auth }, response) {
+  async update({ params, body, auth }, response) {
     const comment = await findCommentOfPost(params)
 
     if (auth.user.id !== comment.userId) {
@@ -49,7 +49,7 @@ class CommentController {
     return response.json(CommentSerializer.serialize(updated))
   }
 
-  async destroy ({ params, auth }, response) {
+  async destroy({ params, auth }, response) {
     const comment = await findCommentOfPost(params)
 
     if (auth.user.id !== comment.userId) {

@@ -1,7 +1,7 @@
 import ApplicationError from './ApplicationError.js'
 
 class ValidationError extends ApplicationError {
-  constructor (details) {
+  constructor(details) {
     super('Validation Failed', 400)
 
     this.details = details

@@ -33,16 +33,23 @@ describe('Posts Resource', () => {
     it('should be in descending order of date', async () => {
       const user = await createUser()
       // Inserted oldest first, so insertion order is the opposite of the expected order
-      const posts = await createMany(createPost, 5, [0, 1, 2, 3, 4].map(day => ({
-        userId: user.id,
-        createdAt: new Date(Date.UTC(2020, 0, day + 1))
-      })))
+      const posts = await createMany(
+        createPost,
+        5,
+        [0, 1, 2, 3, 4].map(day => ({
+          userId: user.id,
+          createdAt: new Date(Date.UTC(2020, 0, day + 1))
+        }))
+      )
 
       const token = jwt.generate(user)
 
       const { body } = await request('GET', '/posts', { token })
 
-      assert.deepStrictEqual(body.map(post => post.id), posts.map(post => post.id).reverse())
+      assert.deepStrictEqual(
+        body.map(post => post.id),
+        posts.map(post => post.id).reverse()
+      )
     })
   })
 

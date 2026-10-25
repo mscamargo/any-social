@@ -9,8 +9,10 @@ process.env.SECRET_KEY = 'nave_node_test'
 const jwt = await import('../../src/utils/jwt.js')
 
 // Issued by jsonwebtoken@9 with secret 'nave_node_test' and payload { id: 1, iat: 1700000000 }
-const LEGACY_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQxMDI0NDQ4MDB9.Stik5XOpY2KYlelHhsGItajOKxH1VLGXArQ9Gr6xRnc'
-const LEGACY_EXPIRED_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwODY0MDB9.jPSHhJ32nHTT_qZHYU3jMMPEYUxn9mjba1CPN6gTcAg'
+const LEGACY_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQxMDI0NDQ4MDB9.Stik5XOpY2KYlelHhsGItajOKxH1VLGXArQ9Gr6xRnc'
+const LEGACY_EXPIRED_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwODY0MDB9.jPSHhJ32nHTT_qZHYU3jMMPEYUxn9mjba1CPN6gTcAg'
 
 const encode = data => Buffer.from(JSON.stringify(data)).toString('base64url')
 
@@ -54,13 +56,19 @@ describe('JWT util', () => {
   })
 
   test('should reject a token signed with a different secret', () => {
-    assert.strictEqual(jwt.verify(build({ alg: 'HS256', typ: 'JWT' }, { id: 1, exp: now() + 60 }, 'another_secret')), false)
+    assert.strictEqual(
+      jwt.verify(build({ alg: 'HS256', typ: 'JWT' }, { id: 1, exp: now() + 60 }, 'another_secret')),
+      false
+    )
   })
 
   test('should reject a token with a tampered payload', () => {
     const [header, , signature] = LEGACY_TOKEN.split('.')
 
-    assert.strictEqual(jwt.verify(`${header}.${encode({ id: 2, iat: 1700000000, exp: 4102444800 })}.${signature}`), false)
+    assert.strictEqual(
+      jwt.verify(`${header}.${encode({ id: 2, iat: 1700000000, exp: 4102444800 })}.${signature}`),
+      false
+    )
   })
 
   test('should reject any alg other than HS256', () => {

@@ -51,9 +51,8 @@ const checkObject = (source, fields, allowUnknown) => {
     const label = `"${field}"`
     const value = source[field]
 
-    const messages = value === undefined
-      ? rule.required ? [`${label} is required`] : []
-      : checks[rule.type](label, value, rule)
+    const messages =
+      value === undefined ? (rule.required ? [`${label} is required`] : []) : checks[rule.type](label, value, rule)
 
     messages.forEach(message => errors.push({ message, field }))
   }
@@ -70,15 +69,16 @@ const checkObject = (source, fields, allowUnknown) => {
 // Reports every error, not just the first. Unknown body keys are rejected,
 // but params may carry keys a schema doesn't list (e.g. :post_id on comment
 // routes)
-export default ({ params, body }) => (request, response, next) => {
-  const errors = [
-    ...(params ? checkObject(request.params, params, true) : []),
-    ...(body ? checkObject(request.body, body, false) : [])
-  ]
+export default ({ params, body }) =>
+  (request, response, next) => {
+    const errors = [
+      ...(params ? checkObject(request.params, params, true) : []),
+      ...(body ? checkObject(request.body, body, false) : [])
+    ]
 
-  if (errors.length) {
-    return next(new ValidationError(errors))
+    if (errors.length) {
+      return next(new ValidationError(errors))
+    }
+
+    return next()
   }
-
-  return next()
-}
