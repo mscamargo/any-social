@@ -1,6 +1,6 @@
 const ALLOWED_METHODS = 'GET,HEAD,PUT,PATCH,POST,DELETE'
 
-module.exports = (request, response, next) => {
+export default (request, response, next) => {
   response.setHeader('Access-Control-Allow-Origin', '*')
 
   if (request.method !== 'OPTIONS') {

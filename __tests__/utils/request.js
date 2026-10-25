@@ -1,7 +1,7 @@
-const http = require('node:http')
-const { after } = require('node:test')
+import http from 'node:http'
+import { after } from 'node:test'
 
-const app = require('../../src/app')
+import app from '../../src/app.js'
 
 // One server per test file (node:test runs each file in its own process),
 // on a random free port.
@@ -15,7 +15,7 @@ after(() => {
 
 // Sends an HTTP request to the app. An object body is sent as JSON; a string
 // is sent as is, so tests can send malformed payloads.
-module.exports = async (method, path, { token, body, headers = {} } = {}) => {
+export default async (method, path, { token, body, headers = {} } = {}) => {
   await listening
 
   const { port } = server.address()

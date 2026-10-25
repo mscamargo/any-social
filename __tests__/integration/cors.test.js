@@ -1,7 +1,7 @@
-const { describe, it } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
 
-const request = require('../utils/request')
+import request from '../utils/request.js'
 
 describe('CORS', () => {
   it('should allow any origin on regular responses', async () => {

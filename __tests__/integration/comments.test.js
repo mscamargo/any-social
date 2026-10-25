@@ -1,12 +1,12 @@
-const { describe, it, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
 
-const request = require('../utils/request')
-const truncateTables = require('../utils/truncate-tables')
-const { createUser, createPost, createComment, createMany } = require('../utils/factories')
-const fake = require('../utils/fake')
-const jwt = require('../../src/utils/jwt')
-const CommentRepository = require('../../src/repositories/CommentRepository')
+import request from '../utils/request.js'
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser, createPost, createComment, createMany } from '../utils/factories.js'
+import * as fake from '../utils/fake.js'
+import * as jwt from '../../src/utils/jwt.js'
+import CommentRepository from '../../src/repositories/CommentRepository.js'
 
 describe('Comments Resource', () => {
   beforeEach(async () => {

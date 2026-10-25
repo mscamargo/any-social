@@ -1,7 +1,7 @@
-const db = require('../database/connection')
-const timestamp = require('../database/timestamp')
-const { hash } = require('../utils/password')
-const UniqueConstraintError = require('../exceptions/UniqueConstraintError')
+import db from '../database/connection.js'
+import timestamp from '../database/timestamp.js'
+import { hash } from '../utils/password.js'
+import UniqueConstraintError from '../exceptions/UniqueConstraintError.js'
 
 const UNIQUE_MESSAGES = {
   username: 'Username is already in use',
@@ -105,4 +105,4 @@ class UserRepository {
   }
 }
 
-module.exports = new UserRepository()
+export default new UserRepository()

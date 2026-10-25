@@ -1,8 +1,8 @@
-const { describe, test } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, test } from 'node:test'
+import assert from 'node:assert/strict'
 
-const validate = require('../../src/utils/validate')
-const ValidationError = require('../../src/exceptions/ValidationError')
+import validate from '../../src/utils/validate.js'
+import ValidationError from '../../src/exceptions/ValidationError.js'
 
 const userSchema = {
   params: {

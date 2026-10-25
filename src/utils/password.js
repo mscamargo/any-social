@@ -1,6 +1,5 @@
-const bcrypt = require('bcryptjs')
+import bcrypt from 'bcryptjs'
 
-module.exports = {
-  hash: password => bcrypt.hash(password, 10),
-  compare: (password, hash) => bcrypt.compare(password, hash)
-}
+export const hash = password => bcrypt.hash(password, 10)
+
+export const compare = (password, hash) => bcrypt.compare(password, hash)

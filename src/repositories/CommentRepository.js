@@ -1,6 +1,6 @@
-const db = require('../database/connection')
-const timestamp = require('../database/timestamp')
-const UserRepository = require('./UserRepository')
+import db from '../database/connection.js'
+import timestamp from '../database/timestamp.js'
+import UserRepository from './UserRepository.js'
 
 const toComment = row =>
   row
@@ -63,4 +63,4 @@ class CommentRepository {
   }
 }
 
-module.exports = new CommentRepository()
+export default new CommentRepository()

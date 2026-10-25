@@ -1,8 +1,8 @@
-const express = require('express')
+import express from 'express'
 
-const routes = require('./routes')
-const cors = require('./middlewares/cors')
-const exceptionHandlers = require('./utils/exception-handlers')
+import routes from './routes.js'
+import cors from './middlewares/cors.js'
+import exceptionHandlers from './utils/exception-handlers.js'
 
 class App {
   constructor () {
@@ -23,10 +23,8 @@ class App {
   }
 
   exceptions () {
-    Object.keys(exceptionHandlers).forEach(handler =>
-      this.express.use(exceptionHandlers[handler])
-    )
+    exceptionHandlers.forEach(handler => this.express.use(handler))
   }
 }
 
-module.exports = new App().express
+export default new App().express

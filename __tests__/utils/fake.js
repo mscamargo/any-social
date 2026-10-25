@@ -1,4 +1,4 @@
-const { randomUUID } = require('node:crypto')
+import { randomUUID } from 'node:crypto'
 
 // Test data generators. Unique fields use a counter instead of random values,
 // so they never collide with the UNIQUE constraints. Text stays within the
@@ -6,10 +6,8 @@ const { randomUUID } = require('node:crypto')
 let counter = 0
 const next = () => ++counter
 
-module.exports = {
-  username: () => `user${next()}`,
-  email: () => `user${next()}@example.com`,
-  password: () => randomUUID(),
-  name: () => `User ${next()}`,
-  text: () => `Text number ${next()}`
-}
+export const username = () => `user${next()}`
+export const email = () => `user${next()}@example.com`
+export const password = () => randomUUID()
+export const name = () => `User ${next()}`
+export const text = () => `Text number ${next()}`

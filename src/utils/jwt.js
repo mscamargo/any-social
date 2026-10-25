@@ -1,5 +1,5 @@
-const { createHmac, timingSafeEqual } = require('node:crypto')
-const { SECRET_KEY } = require('../config/env')
+import { createHmac, timingSafeEqual } from 'node:crypto'
+import { SECRET_KEY } from '../config/env.js'
 
 const EXPIRES_IN = 86400
 
@@ -13,9 +13,9 @@ const parse = segment => {
   }
 }
 
-const sign = (input, secret) => createHmac('sha256', secret).update(input).digest('base64url')
+export const sign = (input, secret) => createHmac('sha256', secret).update(input).digest('base64url')
 
-const decode = token => {
+export const decode = token => {
   if (typeof token !== 'string') return null
 
   const [, payload] = token.split('.')
@@ -23,32 +23,29 @@ const decode = token => {
   return payload ? parse(payload) : null
 }
 
-module.exports = {
-  sign,
-  generate: user => {
-    const iat = Math.floor(Date.now() / 1000)
-    const input = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ id: user.id, iat, exp: iat + EXPIRES_IN })}`
+export const generate = user => {
+  const iat = Math.floor(Date.now() / 1000)
+  const input = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ id: user.id, iat, exp: iat + EXPIRES_IN })}`
 
-    return `${input}.${sign(input, SECRET_KEY)}`
-  },
-  verify: token => {
-    if (typeof token !== 'string') return false
+  return `${input}.${sign(input, SECRET_KEY)}`
+}
 
-    const segments = token.split('.')
-    if (segments.length !== 3) return false
+export const verify = token => {
+  if (typeof token !== 'string') return false
 
-    const [header, payload, signature] = segments
-    const expected = Buffer.from(sign(`${header}.${payload}`, SECRET_KEY))
-    const actual = Buffer.from(signature)
-    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false
+  const segments = token.split('.')
+  if (segments.length !== 3) return false
 
-    const { alg } = parse(header) || {}
-    if (alg !== 'HS256') return false
+  const [header, payload, signature] = segments
+  const expected = Buffer.from(sign(`${header}.${payload}`, SECRET_KEY))
+  const actual = Buffer.from(signature)
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false
 
-    const { exp } = parse(payload) || {}
-    if (typeof exp !== 'number' || Math.floor(Date.now() / 1000) >= exp) return false
+  const { alg } = parse(header) || {}
+  if (alg !== 'HS256') return false
 
-    return true
-  },
-  decode
+  const { exp } = parse(payload) || {}
+  if (typeof exp !== 'number' || Math.floor(Date.now() / 1000) >= exp) return false
+
+  return true
 }

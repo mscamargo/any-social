@@ -1,4 +1,4 @@
-const ApplicationError = require('./ApplicationError')
+import ApplicationError from './ApplicationError.js'
 
 class ValidationError extends ApplicationError {
   constructor (details) {
@@ -8,4 +8,4 @@ class ValidationError extends ApplicationError {
   }
 }
 
-module.exports = ValidationError
+export default ValidationError

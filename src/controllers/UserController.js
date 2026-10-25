@@ -1,7 +1,7 @@
-const UserRepository = require('../repositories/UserRepository')
-const UserSerializer = require('../serializers/UserSerializer')
-const UserNotFoundError = require('../exceptions/UserNotFoundError')
-const ForbiddenError = require('../exceptions/ForbiddenError')
+import UserRepository from '../repositories/UserRepository.js'
+import * as UserSerializer from '../serializers/UserSerializer.js'
+import UserNotFoundError from '../exceptions/UserNotFoundError.js'
+import ForbiddenError from '../exceptions/ForbiddenError.js'
 
 class UserController {
   async index (_, response) {
@@ -60,4 +60,4 @@ class UserController {
   }
 }
 
-module.exports = new UserController()
+export default new UserController()

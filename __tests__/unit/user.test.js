@@ -1,12 +1,12 @@
-const { describe, test, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
-const bcrypt = require('bcryptjs')
+import { describe, test, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
+import bcrypt from 'bcryptjs'
 
-const db = require('../../src/database/connection')
-const UserRepository = require('../../src/repositories/UserRepository')
-const { compare } = require('../../src/utils/password')
-const truncateTables = require('../utils/truncate-tables')
-const { createUser } = require('../utils/factories')
+import db from '../../src/database/connection.js'
+import UserRepository from '../../src/repositories/UserRepository.js'
+import { compare } from '../../src/utils/password.js'
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser } from '../utils/factories.js'
 
 describe('User Repository', () => {
   beforeEach(async () => {

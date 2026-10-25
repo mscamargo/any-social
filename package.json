@@ -1,7 +1,7 @@
 {
   "name": "any-social",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
   "repository": "git@github.com:mscamargo/any-social.git",
   "author": "mscamargo <mscamargo.dev@gmail.com>",
   "license": "MIT",
