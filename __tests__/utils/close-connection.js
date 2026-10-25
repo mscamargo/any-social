@@ -1,5 +1,5 @@
-const knex = require('../../src/database/connection')
+const db = require('../../src/database/connection')
 
-// Each test file gets its own module registry, and with it its own Knex pool.
-// Close it, or the open connection keeps Jest from exiting.
-afterAll(() => knex.destroy())
+// Each test file gets its own module registry, and with it its own database
+// connection. Close it once the file's tests are done.
+afterAll(() => db.close())

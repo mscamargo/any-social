@@ -11,19 +11,16 @@
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "dev": "node --watch --env-file-if-exists=.env server.js",
-    "knex": "node --env-file-if-exists=.env node_modules/knex/bin/cli.js",
+    "migrate": "node --env-file-if-exists=.env src/database/migrate.js",
     "lint": "eslint .",
-    "pretest": "NODE_ENV=test knex migrate:rollback --all && NODE_ENV=test knex migrate:latest",
-    "test": "NODE_ENV=test jest --runInBand",
-    "posttest": "NODE_ENV=test knex migrate:rollback --all"
+    "pretest": "NODE_ENV=test node src/database/migrate.js --reset",
+    "test": "NODE_ENV=test jest --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "express": "^4.22.3",
     "express-validation": "^4.1.1",
-    "joi": "^17.13.8",
-    "knex": "^3.3.0",
-    "sqlite3": "^5.1.7"
+    "joi": "^17.13.8"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

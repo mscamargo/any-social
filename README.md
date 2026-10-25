@@ -8,19 +8,21 @@ This project requires Node.js 24 or newer. The version is pinned in `.tool-versi
 2. Install dependencies with `npm install`
 3. This project uses SQLite as its development and test database. The dev server stores data in `database.sqlite`; set `DB_STORAGE` to use a different file.
 4. Optionally copy `.env.example` to `.env` to configure the app
-5. Create the schema with `npm run knex -- migrate:latest`
+5. Create the schema with `npm run migrate`
 6. Run `npm run dev` to start development server (or `npm start` without auto-reload)
 
-The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the npm scripts above. Run Knex as `npm run knex -- <command>` rather than `npx knex`, which doesn't read `.env`. Variables already set in your shell take precedence over `.env`.
+The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the npm scripts above. Variables already set in your shell take precedence over `.env`.
 
-Migrations are managed by [Knex](https://knexjs.org/) (`knexfile.js`). If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `npm run knex -- migrate:latest` again for the dev database): Knex doesn't read Sequelize's migration history.
+The app talks to SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module, so there's no database driver to install or compile.
+
+Migrations are plain `.sql` files in `src/database/migrations`, applied in file name order by `npm run migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `npm run migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `npm run migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
 
 ## Testing
 _In this release, the tests were designed to run with the SQLite database_
 
 - Run tests: `npm test`
 
-Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `npm test` resets that file's schema before every run (rolling back and re-applying all Knex migrations), so a run that failed and left it migrated doesn't break the next one.
+Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `npm test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
 
 The test scripts don't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite npm test`.
 
