@@ -4,7 +4,7 @@ const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser, createPost, createComment, createMany } = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 const CommentRepository = require('../../src/repositories/CommentRepository')
 
@@ -15,10 +15,10 @@ describe('Comments Resource', () => {
 
   describe('GET /posts/:post_id/comments', () => {
     it('should list the comments of a post with their owner', async () => {
-      const user = await factory.create('User')
-      const posts = await factory.createMany('Post', 2, { userId: user.id })
-      await factory.createMany('Comment', 3, { postId: posts[0].id, userId: user.id })
-      await factory.create('Comment', { postId: posts[1].id, userId: user.id })
+      const user = await createUser()
+      const posts = await createMany(createPost, 2, { userId: user.id })
+      await createMany(createComment, 3, { postId: posts[0].id, userId: user.id })
+      await createComment({ postId: posts[1].id, userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -33,8 +33,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to list comments if not authenticated', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const response = await request('GET', `/posts/${post.id}/comments`)
 
@@ -45,8 +45,8 @@ describe('Comments Resource', () => {
 
   describe('POST /posts/:post_id/comments', () => {
     it('should be able to comment on a post', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
       const text = faker.lorem.sentence()
@@ -58,7 +58,7 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to comment on a post that does not exist', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -72,8 +72,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to comment without text', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -86,8 +86,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to comment with less than 2 characters', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -100,8 +100,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to comment with more than 140 characters', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -119,9 +119,9 @@ describe('Comments Resource', () => {
 
   describe('PUT /posts/:post_id/comments/:id', () => {
     it('should be able to update your comment', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
-      const comment = await factory.create('Comment', { postId: post.id, userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
+      const comment = await createComment({ postId: post.id, userId: user.id })
 
       const token = jwt.generate(user)
       const text = faker.lorem.sentence()
@@ -133,13 +133,13 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to update comment of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { userId: users[1].id })
-      const comment = await factory.create('Comment', { postId: post.id, userId: users[1].id })
+      const post = await createPost({ userId: users[1].id })
+      const comment = await createComment({ postId: post.id, userId: users[1].id })
 
       const token = jwt.generate(users[0])
 
@@ -153,8 +153,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to update a comment that does not exist', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -168,9 +168,9 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to update a comment through another post', async () => {
-      const user = await factory.create('User')
-      const posts = await factory.createMany('Post', 2, { userId: user.id })
-      const comment = await factory.create('Comment', { postId: posts[0].id, userId: user.id })
+      const user = await createUser()
+      const posts = await createMany(createPost, 2, { userId: user.id })
+      const comment = await createComment({ postId: posts[0].id, userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -184,12 +184,12 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to change the owner or the post of your comment', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
-      const posts = await factory.createMany('Post', 2, { userId: users[1].id })
-      const comment = await factory.create('Comment', { postId: posts[0].id, userId: users[0].id })
+      const posts = await createMany(createPost, 2, { userId: users[1].id })
+      const comment = await createComment({ postId: posts[0].id, userId: users[0].id })
 
       const token = jwt.generate(users[0])
 
@@ -218,9 +218,9 @@ describe('Comments Resource', () => {
 
   describe('DELETE /posts/:post_id/comments/:id', () => {
     it('should be able to delete your comment', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
-      const comment = await factory.create('Comment', { postId: post.id, userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
+      const comment = await createComment({ postId: post.id, userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -230,13 +230,13 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to delete comment of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { userId: users[1].id })
-      const comment = await factory.create('Comment', { postId: post.id, userId: users[1].id })
+      const post = await createPost({ userId: users[1].id })
+      const comment = await createComment({ postId: post.id, userId: users[1].id })
 
       const token = jwt.generate(users[0])
 
@@ -247,8 +247,8 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to delete a comment that does not exist', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 

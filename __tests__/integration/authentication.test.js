@@ -2,7 +2,7 @@ const { describe, it, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
 
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser } = require('../utils/factories')
 const request = require('../utils/request')
 
 describe('Authentication Resource', () => {
@@ -12,7 +12,7 @@ describe('Authentication Resource', () => {
 
   it('should be able to authenticate with valid credentials', async () => {
     const password = 'somepassword'
-    const user = await factory.create('User', { password })
+    const user = await createUser({ password })
 
     const response = await request('POST', '/login', {
       body: {
@@ -26,7 +26,7 @@ describe('Authentication Resource', () => {
   })
 
   it('should not be able to authenticate with invalid password', async () => {
-    const user = await factory.create('User', { password: 'storedpassword' })
+    const user = await createUser({ password: 'storedpassword' })
 
     const response = await request('POST', '/login', {
       body: {

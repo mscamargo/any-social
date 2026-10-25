@@ -6,7 +6,7 @@ const db = require('../../src/database/connection')
 const UserRepository = require('../../src/repositories/UserRepository')
 const { compare } = require('../../src/utils/password')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser } = require('../utils/factories')
 
 describe('User Repository', () => {
   beforeEach(async () => {
@@ -15,7 +15,7 @@ describe('User Repository', () => {
 
   test('should encrypt user password on create', async () => {
     const password = '123456'
-    const user = await factory.create('User', { password })
+    const user = await createUser({ password })
 
     const compareHash = await bcrypt.compare(password, user.password)
 
@@ -23,7 +23,7 @@ describe('User Repository', () => {
   })
 
   test('should encrypt user password on update', async () => {
-    const user = await factory.create('User')
+    const user = await createUser()
 
     const updated = await UserRepository.update(user.id, { password: 'newpassword' })
 
@@ -31,7 +31,7 @@ describe('User Repository', () => {
   })
 
   test('should keep the password when updating other fields', async () => {
-    const user = await factory.create('User')
+    const user = await createUser()
 
     const updated = await UserRepository.update(user.id, { title: 'New title', password: undefined })
 
@@ -41,7 +41,7 @@ describe('User Repository', () => {
 
   test('should verify a $2a$ hash created with bcryptjs v2', async () => {
     const legacyHash = '$2a$10$ZEOtVJTYzgPXdhO0k4mewOoAhi15CeMmXhnQ.FH6EBRPV0eTkwKUa' // '123456'
-    const { id } = await factory.create('User')
+    const { id } = await createUser()
     db.prepare('UPDATE users SET password = ? WHERE id = ?').run(legacyHash, id)
 
     const user = await UserRepository.findById(id)

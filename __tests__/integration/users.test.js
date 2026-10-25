@@ -4,7 +4,7 @@ const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser, createMany } = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 const UserRepository = require('../../src/repositories/UserRepository')
 
@@ -15,7 +15,7 @@ describe('Users Resource', () => {
 
   describe('GET /users', () => {
     it('should be able to view all users if authenticated', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -39,7 +39,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to view all users with a token signed with a different secret', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const [header, payload] = jwt.generate(user).split('.')
       const token = `${header}.${payload}.${jwt.sign(`${header}.${payload}`, 'another_secret')}`
@@ -51,7 +51,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to view all users with a token of a deleted user', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
       await UserRepository.remove(user.id)
@@ -63,7 +63,7 @@ describe('Users Resource', () => {
     })
 
     it('should respond with 500 on unexpected errors', async t => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
       t.mock.method(UserRepository, 'list', async () => { throw new Error('Unexpected') }, { times: 1 })
@@ -74,7 +74,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to view a nonexistent user', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -85,7 +85,7 @@ describe('Users Resource', () => {
     })
 
     it('should be able to view other users account if authenticated', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@gmail.com' },
         { username: 'user1', email: 'user1@gmail.com' }
       ])
@@ -126,7 +126,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to create a new user with an existing username', async () => {
-      const { username } = await factory.create('User')
+      const { username } = await createUser()
 
       const response = await request('POST', '/users', {
         body: {
@@ -143,7 +143,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to create a new user with an existing email', async () => {
-      const { email } = await factory.create('User')
+      const { email } = await createUser()
 
       const response = await request('POST', '/users', {
         body: {
@@ -171,7 +171,7 @@ describe('Users Resource', () => {
 
   describe('PUT /users', () => {
     it('should be able to update your account', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -186,7 +186,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to update account of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@gmail.com' },
         { username: 'user1', email: 'user1@gmail.com' }
       ])
@@ -205,7 +205,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to change the id or timestamps of your account', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -241,7 +241,7 @@ describe('Users Resource', () => {
 
   describe('DELETE /users', () => {
     it('should be able to delete your account', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -251,7 +251,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to delete account of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@gmail.com' },
         { username: 'user1', email: 'user1@gmail.com' }
       ])

@@ -4,7 +4,7 @@ const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser, createPost, createMany } = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 const PostRepository = require('../../src/repositories/PostRepository')
 
@@ -14,7 +14,7 @@ describe('Posts Resource', () => {
   })
   describe('GET /posts', () => {
     it('should be able to view all posts if authenticated', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -31,9 +31,9 @@ describe('Posts Resource', () => {
     })
 
     it('should be in descending order of date', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
       // Inserted oldest first, so insertion order is the opposite of the expected order
-      const posts = await factory.createMany('Post', 5, [0, 1, 2, 3, 4].map(day => ({
+      const posts = await createMany(createPost, 5, [0, 1, 2, 3, 4].map(day => ({
         userId: user.id,
         createdAt: new Date(Date.UTC(2020, 0, day + 1))
       })))
@@ -48,7 +48,7 @@ describe('Posts Resource', () => {
 
   describe('POST /posts', () => {
     it('should be able to create a post', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -63,7 +63,7 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to create a post with invalid attributes', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -78,7 +78,7 @@ describe('Posts Resource', () => {
 
   describe('GET /posts/:id', () => {
     it('should not be able to view a nonexistent post', async () => {
-      const user = await factory.create('User')
+      const user = await createUser()
 
       const token = jwt.generate(user)
 
@@ -91,8 +91,8 @@ describe('Posts Resource', () => {
 
   describe('PUT /posts', () => {
     it('should be able to update your post', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -107,12 +107,12 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to update post of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { userId: users[1].id })
+      const post = await createPost({ userId: users[1].id })
 
       const token = jwt.generate(users[0])
 
@@ -128,12 +128,12 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to change the owner of your post', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { userId: users[0].id })
+      const post = await createPost({ userId: users[0].id })
 
       const token = jwt.generate(users[0])
 
@@ -155,8 +155,8 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to change the id of your post', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -176,8 +176,8 @@ describe('Posts Resource', () => {
 
   describe('DELETE /posts', () => {
     it('should be able to delete your post', async () => {
-      const user = await factory.create('User')
-      const post = await factory.create('Post', { userId: user.id })
+      const user = await createUser()
+      const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
 
@@ -187,12 +187,12 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to delete post of other users', async () => {
-      const users = await factory.createMany('User', 2, [
+      const users = await createMany(createUser, 2, [
         { username: 'user0', email: 'user0@email.com' },
         { username: 'user1', email: 'user1@email.com' }
       ])
 
-      const post = await factory.create('Post', { userId: users[1].id })
+      const post = await createPost({ userId: users[1].id })
 
       const token = jwt.generate(users[0])
 

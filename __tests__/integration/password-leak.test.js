@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser, createPost } = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 const CommentRepository = require('../../src/repositories/CommentRepository')
 
@@ -30,8 +30,8 @@ describe('Password exposure', () => {
   beforeEach(async () => {
     await truncateTables()
 
-    user = await factory.create('User', { password: 'secret123' })
-    post = await factory.create('Post', { userId: user.id })
+    user = await createUser({ password: 'secret123' })
+    post = await createPost({ userId: user.id })
     await CommentRepository.create({ text: 'A comment', postId: post.id, userId: user.id })
 
     token = jwt.generate(user)
