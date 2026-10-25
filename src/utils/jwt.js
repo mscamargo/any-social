@@ -8,7 +8,7 @@ const encode = data => Buffer.from(JSON.stringify(data)).toString('base64url')
 const parse = segment => {
   try {
     return JSON.parse(Buffer.from(segment, 'base64url').toString())
-  } catch (e) {
+  } catch {
     return null
   }
 }

@@ -1,7 +1,7 @@
 // Applies the .sql files in migrations/ that haven't run yet, in file name
 // order. With --reset, drops every table first.
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import db from './connection.js'
 
 const MIGRATIONS_DIR = path.join(import.meta.dirname, 'migrations')
