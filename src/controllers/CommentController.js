@@ -1,8 +1,8 @@
-const PostRepository = require('../repositories/PostRepository')
-const CommentRepository = require('../repositories/CommentRepository')
-const CommentSerializer = require('../serializers/CommentSerializer')
-const NotFoundError = require('../exceptions/NotFoundError')
-const ForbiddenError = require('../exceptions/ForbiddenError')
+import PostRepository from '../repositories/PostRepository.js'
+import CommentRepository from '../repositories/CommentRepository.js'
+import * as CommentSerializer from '../serializers/CommentSerializer.js'
+import NotFoundError from '../exceptions/NotFoundError.js'
+import ForbiddenError from '../exceptions/ForbiddenError.js'
 
 const findCommentOfPost = async ({ id, post_id: postId }) => {
   const comment = await CommentRepository.findById(id)
@@ -62,4 +62,4 @@ class CommentController {
   }
 }
 
-module.exports = new CommentController()
+export default new CommentController()

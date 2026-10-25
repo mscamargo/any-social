@@ -1,4 +1,4 @@
-const ApplicationError = require('./ApplicationError')
+import ApplicationError from './ApplicationError.js'
 
 class ForbiddenError extends ApplicationError {
   constructor (message = 'Not allowed') {
@@ -6,4 +6,4 @@ class ForbiddenError extends ApplicationError {
   }
 }
 
-module.exports = ForbiddenError
+export default ForbiddenError

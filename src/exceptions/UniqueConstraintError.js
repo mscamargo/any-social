@@ -1,4 +1,4 @@
-const ApplicationError = require('./ApplicationError')
+import ApplicationError from './ApplicationError.js'
 
 class UniqueConstraintError extends ApplicationError {
   constructor (field, message) {
@@ -8,4 +8,4 @@ class UniqueConstraintError extends ApplicationError {
   }
 }
 
-module.exports = UniqueConstraintError
+export default UniqueConstraintError

@@ -1,7 +1,7 @@
-const fake = require('./fake')
-const UserRepository = require('../../src/repositories/UserRepository')
-const PostRepository = require('../../src/repositories/PostRepository')
-const CommentRepository = require('../../src/repositories/CommentRepository')
+import * as fake from './fake.js'
+import UserRepository from '../../src/repositories/UserRepository.js'
+import PostRepository from '../../src/repositories/PostRepository.js'
+import CommentRepository from '../../src/repositories/CommentRepository.js'
 
 // Factories save through the repositories, so they go through the same code
 // as the app (e.g. password hashing in UserRepository.create).
@@ -35,4 +35,4 @@ const createMany = async (fn, n, overrides = {}) => {
   return records
 }
 
-module.exports = { createUser, createPost, createComment, createMany }
+export { createUser, createPost, createComment, createMany }

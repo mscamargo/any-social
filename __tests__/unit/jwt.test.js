@@ -1,11 +1,12 @@
-const { describe, test } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, test } from 'node:test'
+import assert from 'node:assert/strict'
 
 // Pin the secret the fixtures below were signed with, before env.js reads it.
-// node:test runs each file in its own process, so this doesn't leak.
+// Static imports run before this file's body, so jwt.js is imported
+// dynamically. node:test runs each file in its own process, so this doesn't leak.
 process.env.SECRET_KEY = 'nave_node_test'
 
-const jwt = require('../../src/utils/jwt')
+const jwt = await import('../../src/utils/jwt.js')
 
 // Issued by jsonwebtoken@9 with secret 'nave_node_test' and payload { id: 1, iat: 1700000000 }
 const LEGACY_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjQxMDI0NDQ4MDB9.Stik5XOpY2KYlelHhsGItajOKxH1VLGXArQ9Gr6xRnc'

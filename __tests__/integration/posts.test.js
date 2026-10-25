@@ -1,12 +1,12 @@
-const { describe, it, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
 
-const request = require('../utils/request')
-const truncateTables = require('../utils/truncate-tables')
-const { createUser, createPost, createMany } = require('../utils/factories')
-const fake = require('../utils/fake')
-const jwt = require('../../src/utils/jwt')
-const PostRepository = require('../../src/repositories/PostRepository')
+import request from '../utils/request.js'
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser, createPost, createMany } from '../utils/factories.js'
+import * as fake from '../utils/fake.js'
+import * as jwt from '../../src/utils/jwt.js'
+import PostRepository from '../../src/repositories/PostRepository.js'
 
 describe('Posts Resource', () => {
   beforeEach(async () => {

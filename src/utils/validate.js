@@ -1,4 +1,4 @@
-const ValidationError = require('../exceptions/ValidationError')
+import ValidationError from '../exceptions/ValidationError.js'
 
 // A loose shape check: Joi also validates the TLD against a list of real ones
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -70,7 +70,7 @@ const checkObject = (source, fields, allowUnknown) => {
 // Reports every error, not just the first. Unknown body keys are rejected,
 // but params may carry keys a schema doesn't list (e.g. :post_id on comment
 // routes)
-module.exports = ({ params, body }) => (request, response, next) => {
+export default ({ params, body }) => (request, response, next) => {
   const errors = [
     ...(params ? checkObject(request.params, params, true) : []),
     ...(body ? checkObject(request.body, body, false) : [])

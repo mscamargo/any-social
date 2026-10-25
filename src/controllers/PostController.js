@@ -1,7 +1,7 @@
-const PostRepository = require('../repositories/PostRepository')
-const PostSerializer = require('../serializers/PostSerializer')
-const NotFoundError = require('../exceptions/NotFoundError')
-const ForbiddenError = require('../exceptions/ForbiddenError')
+import PostRepository from '../repositories/PostRepository.js'
+import * as PostSerializer from '../serializers/PostSerializer.js'
+import NotFoundError from '../exceptions/NotFoundError.js'
+import ForbiddenError from '../exceptions/ForbiddenError.js'
 
 class PostController {
   async index (_, response) {
@@ -59,4 +59,4 @@ class PostController {
   }
 }
 
-module.exports = new PostController()
+export default new PostController()

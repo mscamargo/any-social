@@ -1,17 +1,19 @@
-const routes = require('express').Router()
+import express from 'express'
 
-const asyncWrap = require('./utils/async-wrap')
+import asyncWrap from './utils/async-wrap.js'
 
-const authMiddleware = require('./middlewares/auth')
+import authMiddleware from './middlewares/auth.js'
 
-const UserValidator = require('./validators/UserValidator')
-const PostValidator = require('./validators/PostValidator')
-const CommentValidator = require('./validators/CommentValidator')
+import UserValidator from './validators/UserValidator.js'
+import PostValidator from './validators/PostValidator.js'
+import CommentValidator from './validators/CommentValidator.js'
 
-const AuthenticationController = require('./controllers/AuthenticationController')
-const UserController = require('./controllers/UserController')
-const PostController = require('./controllers/PostController')
-const CommentController = require('./controllers/CommentController')
+import AuthenticationController from './controllers/AuthenticationController.js'
+import UserController from './controllers/UserController.js'
+import PostController from './controllers/PostController.js'
+import CommentController from './controllers/CommentController.js'
+
+const routes = express.Router()
 
 /**
  * Public routes
@@ -45,4 +47,4 @@ routes.post('/posts/:post_id/comments', CommentValidator.store(), asyncWrap(Comm
 routes.put('/posts/:post_id/comments/:id', CommentValidator.update(), asyncWrap(CommentController.update))
 routes.delete('/posts/:post_id/comments/:id', CommentValidator.delete(), asyncWrap(CommentController.destroy))
 
-module.exports = routes
+export default routes

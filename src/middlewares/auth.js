@@ -1,8 +1,8 @@
-const UnauthorizedError = require('../exceptions/UnauthorizedError')
-const jwt = require('../utils/jwt')
-const UserRepository = require('../repositories/UserRepository')
+import UnauthorizedError from '../exceptions/UnauthorizedError.js'
+import * as jwt from '../utils/jwt.js'
+import UserRepository from '../repositories/UserRepository.js'
 
-module.exports = async (request, response, next) => {
+export default async (request, response, next) => {
   const authHeader = request.headers.authorization
 
   try {

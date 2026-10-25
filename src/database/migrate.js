@@ -1,10 +1,10 @@
 // Applies the .sql files in migrations/ that haven't run yet, in file name
 // order. With --reset, drops every table first.
-const fs = require('fs')
-const path = require('path')
-const db = require('./connection')
+import fs from 'fs'
+import path from 'path'
+import db from './connection.js'
 
-const MIGRATIONS_DIR = path.join(__dirname, 'migrations')
+const MIGRATIONS_DIR = path.join(import.meta.dirname, 'migrations')
 
 const transaction = fn => {
   db.exec('BEGIN')

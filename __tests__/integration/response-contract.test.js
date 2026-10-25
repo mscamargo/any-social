@@ -1,10 +1,10 @@
-const { describe, it, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
 
-const request = require('../utils/request')
-const truncateTables = require('../utils/truncate-tables')
-const { createUser, createPost, createComment } = require('../utils/factories')
-const jwt = require('../../src/utils/jwt')
+import request from '../utils/request.js'
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser, createPost, createComment } from '../utils/factories.js'
+import * as jwt from '../../src/utils/jwt.js'
 
 // Timestamps change on every write, so the contract only pins their type:
 // typed() swaps each createdAt/updatedAt in a body for its typeof.

@@ -1,4 +1,4 @@
-const NotFoundError = require('./NotFoundError')
+import NotFoundError from './NotFoundError.js'
 
 class UserNotFoundError extends NotFoundError {
   constructor (message = 'User not found') {
@@ -6,4 +6,4 @@ class UserNotFoundError extends NotFoundError {
   }
 }
 
-module.exports = UserNotFoundError
+export default UserNotFoundError

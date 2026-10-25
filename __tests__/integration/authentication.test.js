@@ -1,9 +1,9 @@
-const { describe, it, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
 
-const truncateTables = require('../utils/truncate-tables')
-const { createUser } = require('../utils/factories')
-const request = require('../utils/request')
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser } from '../utils/factories.js'
+import request from '../utils/request.js'
 
 describe('Authentication Resource', () => {
   beforeEach(async () => {

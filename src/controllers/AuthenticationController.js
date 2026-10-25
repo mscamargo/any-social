@@ -1,8 +1,8 @@
-const UserRepository = require('../repositories/UserRepository')
-const UserSerializer = require('../serializers/UserSerializer')
-const UnauthorizedError = require('../exceptions/UnauthorizedError')
-const { compare } = require('../utils/password')
-const jwt = require('../utils/jwt')
+import UserRepository from '../repositories/UserRepository.js'
+import * as UserSerializer from '../serializers/UserSerializer.js'
+import UnauthorizedError from '../exceptions/UnauthorizedError.js'
+import { compare } from '../utils/password.js'
+import * as jwt from '../utils/jwt.js'
 
 class AuthenticationController {
   async store ({ body }, response) {
@@ -21,4 +21,4 @@ class AuthenticationController {
   }
 }
 
-module.exports = new AuthenticationController()
+export default new AuthenticationController()

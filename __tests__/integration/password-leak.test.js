@@ -1,11 +1,11 @@
-const { describe, it, beforeEach } = require('node:test')
-const assert = require('node:assert/strict')
+import { describe, it, beforeEach } from 'node:test'
+import assert from 'node:assert/strict'
 
-const request = require('../utils/request')
-const truncateTables = require('../utils/truncate-tables')
-const { createUser, createPost } = require('../utils/factories')
-const jwt = require('../../src/utils/jwt')
-const CommentRepository = require('../../src/repositories/CommentRepository')
+import request from '../utils/request.js'
+import truncateTables from '../utils/truncate-tables.js'
+import { createUser, createPost } from '../utils/factories.js'
+import * as jwt from '../../src/utils/jwt.js'
+import CommentRepository from '../../src/repositories/CommentRepository.js'
 
 const findPasswordPaths = (value, path = 'body') => {
   if (Array.isArray(value)) {

@@ -1,4 +1,4 @@
-const validate = require('../utils/validate')
+import validate from '../utils/validate.js'
 
 class UserValidator {
   store () {
@@ -35,4 +35,4 @@ class UserValidator {
   }
 }
 
-module.exports = new UserValidator()
+export default new UserValidator()
