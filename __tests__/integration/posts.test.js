@@ -1,7 +1,8 @@
-const request = require('supertest')
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 const { faker } = require('@faker-js/faker')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
@@ -17,18 +18,16 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app).get('/posts')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/posts', { token })
 
-      expect(response.status).toEqual(200)
+      assert.strictEqual(response.status, 200)
     })
 
     it('should not be able to view all posts if not authenticated', async () => {
-      const response = await request(app).get('/posts').send()
+      const response = await request('GET', '/posts')
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Token not provided' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Token not provided' })
     })
 
     it('should be in descending order of date', async () => {
@@ -41,12 +40,9 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const { body } = await request(app)
-        .get('/posts')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const { body } = await request('GET', '/posts', { token })
 
-      expect(body.map(post => post.id)).toEqual(posts.map(post => post.id).reverse())
+      assert.deepStrictEqual(body.map(post => post.id), posts.map(post => post.id).reverse())
     })
   })
 
@@ -56,14 +52,14 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post('/posts')
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('POST', '/posts', {
+        token,
+        body: {
           text: faker.lorem.sentence()
-        })
+        }
+      })
 
-      expect(response.status).toEqual(201)
+      assert.strictEqual(response.status, 201)
     })
 
     it('should not be able to create a post with invalid attributes', async () => {
@@ -71,13 +67,10 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post('/posts')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: 'a' })
+      const response = await request('POST', '/posts', { token, body: { text: 'a' } })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['"text" length must be at least 2 characters long'], field: 'text' }]
       })
     })
@@ -89,13 +82,10 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .get('/posts/1')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/posts/1', { token })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'Resource not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'Resource not found' })
     })
   })
 
@@ -106,14 +96,14 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/posts/${post.id}`, {
+        token,
+        body: {
           text: faker.lorem.sentence()
-        })
+        }
+      })
 
-      expect(response.status).toEqual(200)
+      assert.strictEqual(response.status, 200)
     })
 
     it('should not be able to update post of other users', async () => {
@@ -126,15 +116,15 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .put(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/posts/${post.id}`, {
+        token,
+        body: {
           text: faker.lorem.sentence()
-        })
+        }
+      })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
 
     it('should not be able to change the owner of your post', async () => {
@@ -147,21 +137,21 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .put(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/posts/${post.id}`, {
+        token,
+        body: {
           text: faker.lorem.sentence(),
           userId: users[1].id
-        })
+        }
+      })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['"userId" is not allowed'], field: 'userId' }]
       })
 
       const stored = await PostRepository.findById(post.id)
-      expect(stored.userId).toEqual(users[0].id)
+      assert.strictEqual(stored.userId, users[0].id)
     })
 
     it('should not be able to change the id of your post', async () => {
@@ -170,17 +160,17 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/posts/${post.id}`, {
+        token,
+        body: {
           text: faker.lorem.sentence(),
           id: post.id + 1
-        })
+        }
+      })
 
-      expect(response.status).toEqual(400)
-      expect(await PostRepository.findById(post.id)).not.toBeNull()
-      expect(await PostRepository.findById(post.id + 1)).toBeNull()
+      assert.strictEqual(response.status, 400)
+      assert.notStrictEqual(await PostRepository.findById(post.id), null)
+      assert.strictEqual(await PostRepository.findById(post.id + 1), null)
     })
   })
 
@@ -191,12 +181,9 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .delete(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/posts/${post.id}`, { token })
 
-      expect(response.status).toEqual(204)
+      assert.strictEqual(response.status, 204)
     })
 
     it('should not be able to delete post of other users', async () => {
@@ -209,13 +196,10 @@ describe('Posts Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .delete(`/posts/${post.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/posts/${post.id}`, { token })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
   })
 })

@@ -1,7 +1,8 @@
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 const { faker } = require('@faker-js/faker')
-const request = require('supertest')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
@@ -18,29 +19,23 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .get('/users')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/users', { token })
 
-      expect(response.status).toEqual(200)
+      assert.strictEqual(response.status, 200)
     })
 
     it('should not be able to view all users if not authenticated', async () => {
-      const response = await request(app).get('/users').send()
+      const response = await request('GET', '/users')
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Token not provided' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Token not provided' })
     })
 
     it('should not be able to view all users with an invalid token', async () => {
-      const response = await request(app)
-        .get('/users')
-        .set('Authorization', 'Bearer invalidtoken')
-        .send()
+      const response = await request('GET', '/users', { token: 'invalidtoken' })
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Invalid or expired token' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Invalid or expired token' })
     })
 
     it('should not be able to view all users with a token signed with a different secret', async () => {
@@ -49,13 +44,10 @@ describe('Users Resource', () => {
       const [header, payload] = jwt.generate(user).split('.')
       const token = `${header}.${payload}.${jwt.sign(`${header}.${payload}`, 'another_secret')}`
 
-      const response = await request(app)
-        .get('/users')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/users', { token })
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Invalid or expired token' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Invalid or expired token' })
     })
 
     it('should not be able to view all users with a token of a deleted user', async () => {
@@ -64,29 +56,21 @@ describe('Users Resource', () => {
       const token = jwt.generate(user)
       await UserRepository.remove(user.id)
 
-      const response = await request(app)
-        .get('/users')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/users', { token })
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Invalid credentials' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Invalid credentials' })
     })
 
-    it('should respond with 500 on unexpected errors', async () => {
+    it('should respond with 500 on unexpected errors', async t => {
       const user = await factory.create('User')
 
       const token = jwt.generate(user)
-      const list = jest.spyOn(UserRepository, 'list').mockRejectedValueOnce(new Error('Unexpected'))
+      t.mock.method(UserRepository, 'list', async () => { throw new Error('Unexpected') }, { times: 1 })
 
-      const response = await request(app)
-        .get('/users')
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', '/users', { token })
 
-      list.mockRestore()
-
-      expect(response.status).toEqual(500)
+      assert.strictEqual(response.status, 500)
     })
 
     it('should not be able to view a nonexistent user', async () => {
@@ -94,13 +78,10 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .get(`/users/${user.id + 1}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', `/users/${user.id + 1}`, { token })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'User not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'User not found' })
     })
 
     it('should be able to view other users account if authenticated', async () => {
@@ -111,32 +92,31 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .get(`/users/${users[1].id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', `/users/${users[1].id}`, { token })
 
-      expect(response.status).toEqual(200)
+      assert.strictEqual(response.status, 200)
     })
   })
 
   describe('POST /users', () => {
     it('should be able to create user with valid attributes', async () => {
-      const response = await request(app).post('/users').send({
-        username: faker.internet.userName(),
-        email: faker.internet.email(),
-        title: faker.person.fullName(),
-        password: faker.internet.password()
+      const response = await request('POST', '/users', {
+        body: {
+          username: faker.internet.userName(),
+          email: faker.internet.email(),
+          title: faker.person.fullName(),
+          password: faker.internet.password()
+        }
       })
 
-      expect(response.status).toEqual(201)
+      assert.strictEqual(response.status, 201)
     })
 
     it('should not be able to create user with invalid atrtributes', async () => {
-      const response = await request(app).post('/users').send({})
+      const response = await request('POST', '/users', { body: {} })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [
           { messages: ['"username" is required'], field: 'username' },
           { messages: ['"email" is required'], field: 'email' },
@@ -148,14 +128,16 @@ describe('Users Resource', () => {
     it('should not be able to create a new user with an existing username', async () => {
       const { username } = await factory.create('User')
 
-      const response = await request(app).post('/users').send({
-        username,
-        email: faker.internet.email(),
-        password: faker.internet.password()
+      const response = await request('POST', '/users', {
+        body: {
+          username,
+          email: faker.internet.email(),
+          password: faker.internet.password()
+        }
       })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['Username is already in use'], field: 'username' }]
       })
     })
@@ -163,25 +145,27 @@ describe('Users Resource', () => {
     it('should not be able to create a new user with an existing email', async () => {
       const { email } = await factory.create('User')
 
-      const response = await request(app).post('/users').send({
-        username: faker.internet.userName(),
-        email,
-        password: faker.internet.password()
+      const response = await request('POST', '/users', {
+        body: {
+          username: faker.internet.userName(),
+          email,
+          password: faker.internet.password()
+        }
       })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['E-mail is already in use'], field: 'email' }]
       })
     })
 
     it('should not be able to create a user with a malformed JSON body', async () => {
-      const response = await request(app)
-        .post('/users')
-        .set('Content-Type', 'application/json')
-        .send('{"username":')
+      const response = await request('POST', '/users', {
+        headers: { 'Content-Type': 'application/json' },
+        body: '{"username":'
+      })
 
-      expect(response.status).toEqual(400)
+      assert.strictEqual(response.status, 400)
     })
   })
 
@@ -191,14 +175,14 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/users/${user.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/users/${user.id}`, {
+        token,
+        body: {
           username: faker.internet.userName()
-        })
+        }
+      })
 
-      expect(response.status).toEqual(200)
+      assert.strictEqual(response.status, 200)
     })
 
     it('should not be able to update account of other users', async () => {
@@ -209,15 +193,15 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .put(`/users/${users[1].id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/users/${users[1].id}`, {
+        token,
+        body: {
           username: faker.internet.userName()
-        })
+        }
+      })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
 
     it('should not be able to change the id or timestamps of your account', async () => {
@@ -225,17 +209,17 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/users/${user.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/users/${user.id}`, {
+        token,
+        body: {
           username: faker.internet.userName(),
           id: user.id + 1,
           createdAt: '2000-01-01T00:00:00.000Z'
-        })
+        }
+      })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [
           { messages: ['"id" is not allowed'], field: 'id' },
           { messages: ['"createdAt" is not allowed'], field: 'createdAt' }
@@ -243,15 +227,15 @@ describe('Users Resource', () => {
       })
 
       const stored = await UserRepository.findById(user.id)
-      expect(stored).not.toBeNull()
-      expect(stored.createdAt).toEqual(user.createdAt)
-      expect(await UserRepository.findById(user.id + 1)).toBeNull()
+      assert.notStrictEqual(stored, null)
+      assert.deepStrictEqual(stored.createdAt, user.createdAt)
+      assert.strictEqual(await UserRepository.findById(user.id + 1), null)
     })
 
     it('should not be able to update any account if not authenticated', async () => {
-      const response = await request(app).put('/users/1').send()
+      const response = await request('PUT', '/users/1')
 
-      expect(response.status).toEqual(401)
+      assert.strictEqual(response.status, 401)
     })
   })
 
@@ -261,12 +245,9 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .delete(`/users/${user.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/users/${user.id}`, { token })
 
-      expect(response.status).toEqual(204)
+      assert.strictEqual(response.status, 204)
     })
 
     it('should not be able to delete account of other users', async () => {
@@ -277,19 +258,16 @@ describe('Users Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .delete(`/users/${users[1].id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/users/${users[1].id}`, { token })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
 
     it('should not be able to delete any account if not authenticated', async () => {
-      const response = await request(app).delete('/users/1').send()
+      const response = await request('DELETE', '/users/1')
 
-      expect(response.status).toEqual(401)
+      assert.strictEqual(response.status, 401)
     })
   })
 })

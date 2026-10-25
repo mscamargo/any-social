@@ -1,13 +1,32 @@
-const request = require('supertest')
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 
+// Timestamps change on every write, so the contract only pins their type:
+// typed() swaps each createdAt/updatedAt in a body for its typeof.
 const timestamps = {
-  createdAt: expect.any(String),
-  updatedAt: expect.any(String)
+  createdAt: 'string',
+  updatedAt: 'string'
+}
+
+const typed = value => {
+  if (Array.isArray(value)) return value.map(typed)
+  if (!value || typeof value !== 'object') return value
+
+  return Object.fromEntries(Object.entries(value).map(([key, field]) =>
+    [key, key in timestamps ? typeof field : typed(field)]
+  ))
+}
+
+// Asserts that a created resource got a numeric id and returns the rest.
+const withoutId = ({ id, ...rest }) => {
+  assert.strictEqual(typeof id, 'number')
+
+  return rest
 }
 
 const userShape = user => ({
@@ -48,23 +67,21 @@ describe('Response contract', () => {
     token = jwt.generate(user)
   })
 
-  const send = (method, url, body = {}) =>
-    request(app)[method](url)
-      .set('Authorization', `Bearer ${token}`)
-      .send(body)
+  const send = (method, url, body) => request(method, url, { token, body })
 
   describe('users', () => {
     it('POST /users', async () => {
-      const response = await request(app).post('/users').send({
-        username: 'newuser',
-        email: 'newuser@email.com',
-        title: 'New user',
-        password: 'secret123'
+      const response = await request('POST', '/users', {
+        body: {
+          username: 'newuser',
+          email: 'newuser@email.com',
+          title: 'New user',
+          password: 'secret123'
+        }
       })
 
-      expect(response.status).toEqual(201)
-      expect(response.body).toEqual({
-        id: expect.any(Number),
+      assert.strictEqual(response.status, 201)
+      assert.deepStrictEqual(typed(withoutId(response.body)), {
         username: 'newuser',
         email: 'newuser@email.com',
         title: 'New user',
@@ -80,50 +97,52 @@ describe('Response contract', () => {
         password
       })
 
-      const response = await request(app)
-        .post('/login')
-        .send({ email: loginUser.email, password })
+      const response = await request('POST', '/login', {
+        body: { email: loginUser.email, password }
+      })
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual({ ...userShape(loginUser), token: expect.any(String) })
+      const { token, ...body } = response.body
+
+      assert.strictEqual(response.status, 200)
+      assert.strictEqual(typeof token, 'string')
+      assert.deepStrictEqual(typed(body), userShape(loginUser))
     })
 
     it('GET /users', async () => {
-      const response = await send('get', '/users')
+      const response = await send('GET', '/users')
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual([userShape(user)])
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), [userShape(user)])
     })
 
     it('GET /users/:id', async () => {
-      const response = await send('get', `/users/${user.id}`)
+      const response = await send('GET', `/users/${user.id}`)
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual(userShape(user))
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), userShape(user))
     })
 
     it('PUT /users/:id', async () => {
-      const response = await send('put', `/users/${user.id}`, { title: 'Updated' })
+      const response = await send('PUT', `/users/${user.id}`, { title: 'Updated' })
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual({ ...userShape(user), title: 'Updated' })
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), { ...userShape(user), title: 'Updated' })
     })
   })
 
   describe('posts', () => {
     it('GET /posts', async () => {
-      const response = await send('get', '/posts')
+      const response = await send('GET', '/posts')
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual([postShape(post, { owner: userShape(user) })])
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), [postShape(post, { owner: userShape(user) })])
     })
 
     it('POST /posts', async () => {
-      const response = await send('post', '/posts', { text: 'New post' })
+      const response = await send('POST', '/posts', { text: 'New post' })
 
-      expect(response.status).toEqual(201)
-      expect(response.body).toEqual({
-        id: expect.any(Number),
+      assert.strictEqual(response.status, 201)
+      assert.deepStrictEqual(typed(withoutId(response.body)), {
         text: 'New post',
         userId: user.id,
         ...timestamps
@@ -131,37 +150,36 @@ describe('Response contract', () => {
     })
 
     it('GET /posts/:id', async () => {
-      const response = await send('get', `/posts/${post.id}`)
+      const response = await send('GET', `/posts/${post.id}`)
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual(postShape(post, {
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), postShape(post, {
         owner: userShape(user),
         comments: [commentShape(comment)]
       }))
     })
 
     it('PUT /posts/:id', async () => {
-      const response = await send('put', `/posts/${post.id}`, { text: 'Edited post' })
+      const response = await send('PUT', `/posts/${post.id}`, { text: 'Edited post' })
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual(postShape(post, { text: 'Edited post' }))
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), postShape(post, { text: 'Edited post' }))
     })
   })
 
   describe('comments', () => {
     it('GET /posts/:post_id/comments', async () => {
-      const response = await send('get', `/posts/${post.id}/comments`)
+      const response = await send('GET', `/posts/${post.id}/comments`)
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual([commentShape(comment, { owner: userShape(user) })])
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), [commentShape(comment, { owner: userShape(user) })])
     })
 
     it('POST /posts/:post_id/comments', async () => {
-      const response = await send('post', `/posts/${post.id}/comments`, { text: 'New comment' })
+      const response = await send('POST', `/posts/${post.id}/comments`, { text: 'New comment' })
 
-      expect(response.status).toEqual(201)
-      expect(response.body).toEqual({
-        id: expect.any(Number),
+      assert.strictEqual(response.status, 201)
+      assert.deepStrictEqual(typed(withoutId(response.body)), {
         text: 'New comment',
         postId: post.id,
         userId: user.id,
@@ -170,10 +188,10 @@ describe('Response contract', () => {
     })
 
     it('PUT /posts/:post_id/comments/:id', async () => {
-      const response = await send('put', `/posts/${post.id}/comments/${comment.id}`, { text: 'Edited comment' })
+      const response = await send('PUT', `/posts/${post.id}/comments/${comment.id}`, { text: 'Edited comment' })
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toEqual(commentShape(comment, { text: 'Edited comment' }))
+      assert.strictEqual(response.status, 200)
+      assert.deepStrictEqual(typed(response.body), commentShape(comment, { text: 'Edited comment' }))
     })
   })
 })
