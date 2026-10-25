@@ -14,7 +14,8 @@ after(() => {
 })
 
 // Sends an HTTP request to the app. An object body is sent as JSON; a string
-// is sent as is, so tests can send malformed payloads.
+// is sent as is, so tests can send malformed payloads. A JSON body is parsed
+// unless it's empty, as in a HEAD response.
 export default async (method, path, { token, body, headers = {} } = {}) => {
   await listening
 
@@ -33,7 +34,7 @@ export default async (method, path, { token, body, headers = {} } = {}) => {
   return {
     status: response.status,
     headers: response.headers,
-    body: isJson ? JSON.parse(text) : undefined,
+    body: isJson && text ? JSON.parse(text) : undefined,
     text
   }
 }

@@ -78,6 +78,7 @@ describe('Users Resource', () => {
       const response = await request('GET', '/users', { token })
 
       assert.strictEqual(response.status, 500)
+      assert.deepStrictEqual(response.body, { message: 'Internal Server Error' })
     })
 
     it('should not be able to view a nonexistent user', async () => {

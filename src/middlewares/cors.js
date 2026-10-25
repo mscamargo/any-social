@@ -10,12 +10,13 @@ export default (request, response, next) => {
   const requestedHeaders = request.headers['access-control-request-headers']
 
   response.setHeader('Access-Control-Allow-Methods', ALLOWED_METHODS)
-  response.vary('Access-Control-Request-Headers')
+  response.setHeader('Vary', 'Access-Control-Request-Headers')
 
   if (requestedHeaders) {
     response.setHeader('Access-Control-Allow-Headers', requestedHeaders)
   }
 
   response.setHeader('Content-Length', '0')
-  response.status(204).end()
+  response.statusCode = 204
+  response.end()
 }

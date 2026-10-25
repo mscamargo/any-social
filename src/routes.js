@@ -1,6 +1,4 @@
-import express from 'express'
-
-import asyncWrap from './utils/async-wrap.js'
+import Router from './utils/router.js'
 
 import authMiddleware from './middlewares/auth.js'
 
@@ -13,13 +11,13 @@ import UserController from './controllers/UserController.js'
 import PostController from './controllers/PostController.js'
 import CommentController from './controllers/CommentController.js'
 
-const routes = express.Router()
+const routes = new Router()
 
 /**
  * Public routes
  */
-routes.post('/login', asyncWrap(AuthenticationController.store))
-routes.post('/users', UserValidator.store(), asyncWrap(UserController.store))
+routes.post('/login', AuthenticationController.store)
+routes.post('/users', UserValidator.store(), UserController.store)
 
 /**
  * Private routes
@@ -27,24 +25,24 @@ routes.post('/users', UserValidator.store(), asyncWrap(UserController.store))
 routes.use(authMiddleware)
 
 // Users
-routes.get('/users', asyncWrap(UserController.index))
-routes.get('/users/:id', asyncWrap(UserController.show))
-routes.put('/users/:id', UserValidator.update(), asyncWrap(UserController.update))
-routes.delete('/users/:id', UserValidator.delete(), asyncWrap(UserController.destroy))
+routes.get('/users', UserController.index)
+routes.get('/users/:id', UserController.show)
+routes.put('/users/:id', UserValidator.update(), UserController.update)
+routes.delete('/users/:id', UserValidator.delete(), UserController.destroy)
 
 // Posts
-routes.get('/posts', asyncWrap(PostController.index))
-routes.post('/posts', PostValidator.store(), asyncWrap(PostController.store))
+routes.get('/posts', PostController.index)
+routes.post('/posts', PostValidator.store(), PostController.store)
 
-routes.get('/posts/:id', asyncWrap(PostController.show))
-routes.put('/posts/:id', PostValidator.update(), asyncWrap(PostController.update))
-routes.delete('/posts/:id', PostValidator.delete(), asyncWrap(PostController.destroy))
+routes.get('/posts/:id', PostController.show)
+routes.put('/posts/:id', PostValidator.update(), PostController.update)
+routes.delete('/posts/:id', PostValidator.delete(), PostController.destroy)
 
 // Comments
-routes.get('/posts/:post_id/comments', asyncWrap(CommentController.index))
-routes.post('/posts/:post_id/comments', CommentValidator.store(), asyncWrap(CommentController.store))
+routes.get('/posts/:post_id/comments', CommentController.index)
+routes.post('/posts/:post_id/comments', CommentValidator.store(), CommentController.store)
 
-routes.put('/posts/:post_id/comments/:id', CommentValidator.update(), asyncWrap(CommentController.update))
-routes.delete('/posts/:post_id/comments/:id', CommentValidator.delete(), asyncWrap(CommentController.destroy))
+routes.put('/posts/:post_id/comments/:id', CommentValidator.update(), CommentController.update)
+routes.delete('/posts/:post_id/comments/:id', CommentValidator.delete(), CommentController.destroy)
 
 export default routes
