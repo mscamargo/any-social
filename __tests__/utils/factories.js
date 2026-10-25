@@ -1,4 +1,4 @@
-const { faker } = require('@faker-js/faker')
+const fake = require('./fake')
 const UserRepository = require('../../src/repositories/UserRepository')
 const PostRepository = require('../../src/repositories/PostRepository')
 const CommentRepository = require('../../src/repositories/CommentRepository')
@@ -6,20 +6,20 @@ const CommentRepository = require('../../src/repositories/CommentRepository')
 // Factories save through the repositories, so they go through the same code
 // as the app (e.g. password hashing in UserRepository.create).
 const createUser = (overrides = {}) => UserRepository.create({
-  username: faker.internet.userName(),
-  email: faker.internet.email(),
-  password: faker.internet.password(),
-  title: faker.person.fullName(),
+  username: fake.username(),
+  email: fake.email(),
+  password: fake.password(),
+  title: fake.name(),
   ...overrides
 })
 
 const createPost = (overrides = {}) => PostRepository.create({
-  text: faker.lorem.sentence(),
+  text: fake.text(),
   ...overrides
 })
 
 const createComment = (overrides = {}) => CommentRepository.create({
-  text: faker.lorem.sentence(),
+  text: fake.text(),
   ...overrides
 })
 

@@ -1,10 +1,10 @@
 const { describe, it, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
-const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const { createUser, createPost, createMany } = require('../utils/factories')
+const fake = require('../utils/fake')
 const jwt = require('../../src/utils/jwt')
 const PostRepository = require('../../src/repositories/PostRepository')
 
@@ -55,7 +55,7 @@ describe('Posts Resource', () => {
       const response = await request('POST', '/posts', {
         token,
         body: {
-          text: faker.lorem.sentence()
+          text: fake.text()
         }
       })
 
@@ -99,7 +99,7 @@ describe('Posts Resource', () => {
       const response = await request('PUT', `/posts/${post.id}`, {
         token,
         body: {
-          text: faker.lorem.sentence()
+          text: fake.text()
         }
       })
 
@@ -107,10 +107,7 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to update post of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const post = await createPost({ userId: users[1].id })
 
@@ -119,7 +116,7 @@ describe('Posts Resource', () => {
       const response = await request('PUT', `/posts/${post.id}`, {
         token,
         body: {
-          text: faker.lorem.sentence()
+          text: fake.text()
         }
       })
 
@@ -128,10 +125,7 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to change the owner of your post', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const post = await createPost({ userId: users[0].id })
 
@@ -140,7 +134,7 @@ describe('Posts Resource', () => {
       const response = await request('PUT', `/posts/${post.id}`, {
         token,
         body: {
-          text: faker.lorem.sentence(),
+          text: fake.text(),
           userId: users[1].id
         }
       })
@@ -163,7 +157,7 @@ describe('Posts Resource', () => {
       const response = await request('PUT', `/posts/${post.id}`, {
         token,
         body: {
-          text: faker.lorem.sentence(),
+          text: fake.text(),
           id: post.id + 1
         }
       })
@@ -187,10 +181,7 @@ describe('Posts Resource', () => {
     })
 
     it('should not be able to delete post of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const post = await createPost({ userId: users[1].id })
 
