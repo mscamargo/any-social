@@ -1,7 +1,7 @@
 const express = require('express')
-const cors = require('cors')
 
 const routes = require('./routes')
+const cors = require('./middlewares/cors')
 const exceptionHandlers = require('./utils/exception-handlers')
 
 class App {
@@ -14,7 +14,7 @@ class App {
   }
 
   middlewares () {
-    this.express.use(cors())
+    this.express.use(cors)
     this.express.use(express.json())
   }
 
