@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
-const factory = require('../utils/factories')
+const { createUser, createPost, createComment } = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
 
 // Timestamps change on every write, so the contract only pins their type:
@@ -60,9 +60,9 @@ describe('Response contract', () => {
   beforeEach(async () => {
     await truncateTables()
 
-    user = await factory.create('User')
-    post = await factory.create('Post', { userId: user.id })
-    comment = await factory.create('Comment', { postId: post.id, userId: user.id })
+    user = await createUser()
+    post = await createPost({ userId: user.id })
+    comment = await createComment({ postId: post.id, userId: user.id })
 
     token = jwt.generate(user)
   })
@@ -91,7 +91,7 @@ describe('Response contract', () => {
 
     it('POST /login', async () => {
       const password = 'secret123'
-      const loginUser = await factory.create('User', {
+      const loginUser = await createUser({
         username: 'loginuser',
         email: 'login@email.com',
         password
