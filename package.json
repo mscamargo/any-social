@@ -18,8 +18,7 @@
     "test": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-exclude='src/config/**' --test-coverage-exclude='src/database/**' --test-coverage-exclude='src/exceptions/**' '__tests__/**/*.test.js'"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "express": "^4.22.3"
+    "bcryptjs": "^3.0.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3"

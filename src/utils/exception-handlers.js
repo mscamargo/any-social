@@ -1,4 +1,4 @@
-import { IS_DEV } from '../config/env.js'
+import { IS_DEV, IS_TEST } from '../config/env.js'
 import ApplicationError from '../exceptions/ApplicationError.js'
 import UniqueConstraintError from '../exceptions/UniqueConstraintError.js'
 import ValidationError from '../exceptions/ValidationError.js'
@@ -40,7 +40,20 @@ const applicationErrors = (error, request, response, next) => {
   return response.status(status).json({ message })
 }
 
+// Answers every error the handlers before it passed on
+const unexpectedErrors = (error, request, response, next) => {
+  if (!IS_TEST) {
+    console.error(error)
+  }
+
+  if (response.headersSent) {
+    return response.destroy()
+  }
+
+  return response.status(500).json({ message: 'Internal Server Error' })
+}
+
 // Registered in this order. UniqueConstraintError and ValidationError extend
-// ApplicationError, so applicationErrors must come last or it would answer
-// for them with { message } instead of { errors }.
-export default [uniqueConstraintErrorHandler, schemaValidationErrorHandler, applicationErrors]
+// ApplicationError, so applicationErrors must come after them or it would
+// answer for them with { message } instead of { errors }.
+export default [uniqueConstraintErrorHandler, schemaValidationErrorHandler, applicationErrors, unexpectedErrors]
