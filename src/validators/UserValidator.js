@@ -1,41 +1,36 @@
-const { Joi } = require('express-validation')
 const validate = require('../utils/validate')
 
 class UserValidator {
   store () {
     return validate({
-      body: Joi.object({
-        username: Joi.string()
-          .required()
-          .min(2),
-        email: Joi.string()
-          .email()
-          .required(),
-        password: Joi.string().required(),
-        title: Joi.string()
-      })
+      body: {
+        username: { type: 'string', required: true, min: 2 },
+        email: { type: 'string', required: true, email: true },
+        password: { type: 'string', required: true },
+        title: { type: 'string' }
+      }
     })
   }
 
   update () {
     return validate({
-      params: Joi.object({
-        id: Joi.number().required()
-      }),
-      body: Joi.object({
-        username: Joi.string().min(2),
-        email: Joi.string().email(),
-        password: Joi.string(),
-        title: Joi.string()
-      })
+      params: {
+        id: { type: 'number', required: true }
+      },
+      body: {
+        username: { type: 'string', min: 2 },
+        email: { type: 'string', email: true },
+        password: { type: 'string' },
+        title: { type: 'string' }
+      }
     })
   }
 
   delete () {
     return validate({
-      params: Joi.object({
-        id: Joi.number().required()
-      })
+      params: {
+        id: { type: 'number', required: true }
+      }
     })
   }
 }

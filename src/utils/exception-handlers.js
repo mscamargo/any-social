@@ -1,7 +1,7 @@
-const { ValidationError } = require('express-validation')
 const env = require('../config/env')
 const ApplicationError = require('../exceptions/ApplicationError')
 const UniqueConstraintError = require('../exceptions/UniqueConstraintError')
+const ValidationError = require('../exceptions/ValidationError')
 
 module.exports = {
   uniqueConstraintErrorHandler: (error, request, response, next) => {
@@ -19,14 +19,12 @@ module.exports = {
       return next(error)
     }
 
-    const errors = Object.values(error.details)
-      .flat()
-      .map(({ message, path }) => ({
-        messages: [message],
-        field: path[0]
-      }))
+    const errors = error.details.map(({ message, field }) => ({
+      messages: [message],
+      field
+    }))
 
-    return response.status(error.statusCode).json({ errors })
+    return response.status(error.status).json({ errors })
   },
 
   applicationErrors: (error, request, response, next) => {

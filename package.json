@@ -18,9 +18,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "express": "^4.22.3",
-    "express-validation": "^4.1.1",
-    "joi": "^17.13.8"
+    "express": "^4.22.3"
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",

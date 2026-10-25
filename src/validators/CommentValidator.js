@@ -1,37 +1,30 @@
-const { Joi } = require('express-validation')
 const validate = require('../utils/validate')
 
 class CommentValidator {
   store () {
     return validate({
-      body: Joi.object({
-        text: Joi.string()
-          .required()
-          .min(2)
-          .max(140)
-      })
+      body: {
+        text: { type: 'string', required: true, min: 2, max: 140 }
+      }
     })
   }
 
   update () {
     return validate({
-      params: Joi.object({
-        id: Joi.number().required()
-      }),
-      body: Joi.object({
-        text: Joi.string()
-          .required()
-          .min(2)
-          .max(140)
-      })
+      params: {
+        id: { type: 'number', required: true }
+      },
+      body: {
+        text: { type: 'string', required: true, min: 2, max: 140 }
+      }
     })
   }
 
   delete () {
     return validate({
-      params: Joi.object({
-        id: Joi.number().required()
-      })
+      params: {
+        id: { type: 'number', required: true }
+      }
     })
   }
 }
