@@ -1,7 +1,7 @@
 import validate from '../utils/validate.js'
 
 class CommentValidator {
-  store () {
+  store() {
     return validate({
       body: {
         text: { type: 'string', required: true, min: 2, max: 140 }
@@ -9,7 +9,7 @@ class CommentValidator {
     })
   }
 
-  update () {
+  update() {
     return validate({
       params: {
         id: { type: 'number', required: true }
@@ -20,7 +20,7 @@ class CommentValidator {
     })
   }
 
-  delete () {
+  delete() {
     return validate({
       params: {
         id: { type: 'number', required: true }

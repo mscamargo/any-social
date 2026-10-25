@@ -15,12 +15,12 @@ const toPost = row =>
     : null
 
 class PostRepository {
-  async findById (id) {
+  async findById(id) {
     return toPost(db.prepare('SELECT * FROM posts WHERE id = ?').get(id))
   }
 
   // The post comes with its owner and its comments (without their owners).
-  async findByIdWithOwnerAndComments (id) {
+  async findByIdWithOwnerAndComments(id) {
     const post = await this.findById(id)
 
     if (!post) {
@@ -36,7 +36,7 @@ class PostRepository {
   }
 
   // Newest first. Each post comes with its owner, loaded in one extra query.
-  async list () {
+  async list() {
     const posts = db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all().map(toPost)
 
     const owners = await UserRepository.findByIds([...new Set(posts.map(({ userId }) => userId))])
@@ -46,7 +46,7 @@ class PostRepository {
   }
 
   // createdAt is only passed by tests that need posts at a given date.
-  async create ({ text, userId, createdAt }) {
+  async create({ text, userId, createdAt }) {
     const now = timestamp()
 
     const row = db
@@ -60,7 +60,7 @@ class PostRepository {
     return toPost(row)
   }
 
-  async update (id, { text }) {
+  async update(id, { text }) {
     const row = db
       .prepare('UPDATE posts SET text = ?, updated_at = ? WHERE id = ? RETURNING *')
       .get(text, timestamp(), id)
@@ -68,7 +68,7 @@ class PostRepository {
     return toPost(row)
   }
 
-  async remove (id) {
+  async remove(id) {
     return db.prepare('DELETE FROM posts WHERE id = ?').run(id).changes
   }
 }

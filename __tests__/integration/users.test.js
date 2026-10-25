@@ -66,7 +66,14 @@ describe('Users Resource', () => {
       const user = await createUser()
 
       const token = jwt.generate(user)
-      t.mock.method(UserRepository, 'list', async () => { throw new Error('Unexpected') }, { times: 1 })
+      t.mock.method(
+        UserRepository,
+        'list',
+        async () => {
+          throw new Error('Unexpected')
+        },
+        { times: 1 }
+      )
 
       const response = await request('GET', '/users', { token })
 

@@ -35,27 +35,27 @@ const rethrowUniqueViolation = error => {
 }
 
 class UserRepository {
-  async findById (id) {
+  async findById(id) {
     return toUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id))
   }
 
-  async findByEmail (email) {
+  async findByEmail(email) {
     return toUser(db.prepare('SELECT * FROM users WHERE email = ?').get(email))
   }
 
-  async findByIds (ids) {
+  async findByIds(ids) {
     const rows = db.prepare('SELECT * FROM users WHERE id IN (SELECT value FROM json_each(?))').all(JSON.stringify(ids))
 
     return rows.map(toUser)
   }
 
-  async list () {
+  async list() {
     const rows = db.prepare('SELECT * FROM users ORDER BY id').all()
 
     return rows.map(toUser)
   }
 
-  async create ({ username, email, password, title }) {
+  async create({ username, email, password, title }) {
     const now = timestamp()
     const hashed = await hash(password)
 
@@ -75,7 +75,7 @@ class UserRepository {
   }
 
   // Leaves out fields that are undefined, so callers can pass a partial update.
-  async update (id, { username, email, password, title }) {
+  async update(id, { username, email, password, title }) {
     const changes = Object.fromEntries(
       Object.entries({ username, email, title }).filter(([, value]) => value !== undefined)
     )
@@ -87,7 +87,9 @@ class UserRepository {
     changes.updated_at = timestamp()
 
     // The column names come from the fixed list above, never from the caller.
-    const assignments = Object.keys(changes).map(column => `${column} = ?`).join(', ')
+    const assignments = Object.keys(changes)
+      .map(column => `${column} = ?`)
+      .join(', ')
 
     try {
       const row = db
@@ -100,7 +102,7 @@ class UserRepository {
     }
   }
 
-  async remove (id) {
+  async remove(id) {
     return db.prepare('DELETE FROM users WHERE id = ?').run(id).changes
   }
 }

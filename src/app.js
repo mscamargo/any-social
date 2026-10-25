@@ -5,7 +5,7 @@ import cors from './middlewares/cors.js'
 import exceptionHandlers from './utils/exception-handlers.js'
 
 class App {
-  constructor () {
+  constructor() {
     this.express = express()
 
     this.middlewares()
@@ -13,16 +13,16 @@ class App {
     this.exceptions()
   }
 
-  middlewares () {
+  middlewares() {
     this.express.use(cors)
     this.express.use(express.json())
   }
 
-  routes () {
+  routes() {
     this.express.use(routes)
   }
 
-  exceptions () {
+  exceptions() {
     exceptionHandlers.forEach(handler => this.express.use(handler))
   }
 }

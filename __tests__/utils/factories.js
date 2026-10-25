@@ -5,23 +5,26 @@ import CommentRepository from '../../src/repositories/CommentRepository.js'
 
 // Factories save through the repositories, so they go through the same code
 // as the app (e.g. password hashing in UserRepository.create).
-const createUser = (overrides = {}) => UserRepository.create({
-  username: fake.username(),
-  email: fake.email(),
-  password: fake.password(),
-  title: fake.name(),
-  ...overrides
-})
+const createUser = (overrides = {}) =>
+  UserRepository.create({
+    username: fake.username(),
+    email: fake.email(),
+    password: fake.password(),
+    title: fake.name(),
+    ...overrides
+  })
 
-const createPost = (overrides = {}) => PostRepository.create({
-  text: fake.text(),
-  ...overrides
-})
+const createPost = (overrides = {}) =>
+  PostRepository.create({
+    text: fake.text(),
+    ...overrides
+  })
 
-const createComment = (overrides = {}) => CommentRepository.create({
-  text: fake.text(),
-  ...overrides
-})
+const createComment = (overrides = {}) =>
+  CommentRepository.create({
+    text: fake.text(),
+    ...overrides
+  })
 
 // Calls fn n times, one after another. overrides is either shared by every
 // record or an array with one entry per record.

@@ -4,19 +4,19 @@ import UserNotFoundError from '../exceptions/UserNotFoundError.js'
 import ForbiddenError from '../exceptions/ForbiddenError.js'
 
 class UserController {
-  async index (_, response) {
+  async index(_, response) {
     const users = await UserRepository.list()
 
     return response.json(users.map(UserSerializer.serialize))
   }
 
-  async store ({ body }, response) {
+  async store({ body }, response) {
     const user = await UserRepository.create(body)
 
     return response.status(201).json(UserSerializer.serialize(user))
   }
 
-  async show ({ params }, response) {
+  async show({ params }, response) {
     const user = await UserRepository.findById(params.id)
 
     if (!user) {
@@ -26,7 +26,7 @@ class UserController {
     return response.json(UserSerializer.serialize(user))
   }
 
-  async update ({ params, body, auth }, response) {
+  async update({ params, body, auth }, response) {
     if (auth.user.id !== Number(params.id)) {
       throw new ForbiddenError()
     }
@@ -44,7 +44,7 @@ class UserController {
     return response.json(UserSerializer.serialize(updated))
   }
 
-  async destroy ({ params, auth }, response) {
+  async destroy({ params, auth }, response) {
     if (auth.user.id !== Number(params.id)) {
       throw new ForbiddenError()
     }
