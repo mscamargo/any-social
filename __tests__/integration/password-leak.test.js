@@ -1,6 +1,7 @@
-const request = require('supertest')
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
@@ -48,33 +49,37 @@ describe('Password exposure', () => {
     ['POST', '/posts/:post_id/comments', () => `/posts/${post.id}/comments`, () => ({ text: 'New comment' })]
   ]
 
-  it.each(authenticated)('%s %s response should not contain a password field', async (method, _, url, body = () => ({})) => {
-    const response = await request(app)[method.toLowerCase()](url())
-      .set('Authorization', `Bearer ${token}`)
-      .send(body())
+  for (const [method, route, url, body = () => undefined] of authenticated) {
+    it(`${method} ${route} response should not contain a password field`, async () => {
+      const response = await request(method, url(), { token, body: body() })
 
-    expect(response.status).toBeLessThan(300)
-    expect(findPasswordPaths(response.body)).toEqual([])
-  })
+      assert.ok(response.status < 300)
+      assert.deepStrictEqual(findPasswordPaths(response.body), [])
+    })
+  }
 
   it('POST /users response should not contain a password field', async () => {
-    const response = await request(app).post('/users').send({
-      username: 'newuser',
-      email: 'newuser@email.com',
-      password: 'secret123'
+    const response = await request('POST', '/users', {
+      body: {
+        username: 'newuser',
+        email: 'newuser@email.com',
+        password: 'secret123'
+      }
     })
 
-    expect(response.status).toEqual(201)
-    expect(findPasswordPaths(response.body)).toEqual([])
+    assert.strictEqual(response.status, 201)
+    assert.deepStrictEqual(findPasswordPaths(response.body), [])
   })
 
   it('POST /login response should not contain a password field', async () => {
-    const response = await request(app).post('/login').send({
-      email: user.email,
-      password: 'secret123'
+    const response = await request('POST', '/login', {
+      body: {
+        email: user.email,
+        password: 'secret123'
+      }
     })
 
-    expect(response.status).toEqual(200)
-    expect(findPasswordPaths(response.body)).toEqual([])
+    assert.strictEqual(response.status, 200)
+    assert.deepStrictEqual(findPasswordPaths(response.body), [])
   })
 })

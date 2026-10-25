@@ -1,7 +1,8 @@
-const request = require('supertest')
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 const { faker } = require('@faker-js/faker')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
 const jwt = require('../../src/utils/jwt')
@@ -21,16 +22,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .get(`/posts/${posts[0].id}/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('GET', `/posts/${posts[0].id}/comments`, { token })
 
-      expect(response.status).toEqual(200)
-      expect(response.body).toHaveLength(3)
+      assert.strictEqual(response.status, 200)
+      assert.strictEqual(response.body.length, 3)
       response.body.forEach(comment => {
-        expect(comment.postId).toEqual(posts[0].id)
-        expect(comment.owner.id).toEqual(user.id)
+        assert.strictEqual(comment.postId, posts[0].id)
+        assert.strictEqual(comment.owner.id, user.id)
       })
     })
 
@@ -38,12 +36,10 @@ describe('Comments Resource', () => {
       const user = await factory.create('User')
       const post = await factory.create('Post', { userId: user.id })
 
-      const response = await request(app)
-        .get(`/posts/${post.id}/comments`)
-        .send()
+      const response = await request('GET', `/posts/${post.id}/comments`)
 
-      expect(response.status).toEqual(401)
-      expect(response.body).toEqual({ message: 'Token not provided' })
+      assert.strictEqual(response.status, 401)
+      assert.deepStrictEqual(response.body, { message: 'Token not provided' })
     })
   })
 
@@ -55,13 +51,10 @@ describe('Comments Resource', () => {
       const token = jwt.generate(user)
       const text = faker.lorem.sentence()
 
-      const response = await request(app)
-        .post(`/posts/${post.id}/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text })
+      const response = await request('POST', `/posts/${post.id}/comments`, { token, body: { text } })
 
-      expect(response.status).toEqual(201)
-      expect(response.body).toMatchObject({ text, postId: post.id, userId: user.id })
+      assert.strictEqual(response.status, 201)
+      assert.partialDeepStrictEqual(response.body, { text, postId: post.id, userId: user.id })
     })
 
     it('should not be able to comment on a post that does not exist', async () => {
@@ -69,13 +62,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post('/posts/9999/comments')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: faker.lorem.sentence() })
+      const response = await request('POST', '/posts/9999/comments', {
+        token,
+        body: { text: faker.lorem.sentence() }
+      })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'Post not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'Post not found' })
     })
 
     it('should not be able to comment without text', async () => {
@@ -84,13 +77,10 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post(`/posts/${post.id}/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({})
+      const response = await request('POST', `/posts/${post.id}/comments`, { token, body: {} })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['"text" is required'], field: 'text' }]
       })
     })
@@ -101,13 +91,10 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post(`/posts/${post.id}/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: 'a' })
+      const response = await request('POST', `/posts/${post.id}/comments`, { token, body: { text: 'a' } })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['"text" length must be at least 2 characters long'], field: 'text' }]
       })
     })
@@ -118,13 +105,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .post(`/posts/${post.id}/comments`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: 'a'.repeat(141) })
+      const response = await request('POST', `/posts/${post.id}/comments`, {
+        token,
+        body: { text: 'a'.repeat(141) }
+      })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [{ messages: ['"text" length must be less than or equal to 140 characters long'], field: 'text' }]
       })
     })
@@ -139,13 +126,10 @@ describe('Comments Resource', () => {
       const token = jwt.generate(user)
       const text = faker.lorem.sentence()
 
-      const response = await request(app)
-        .put(`/posts/${post.id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text })
+      const response = await request('PUT', `/posts/${post.id}/comments/${comment.id}`, { token, body: { text } })
 
-      expect(response.status).toEqual(200)
-      expect(response.body.text).toEqual(text)
+      assert.strictEqual(response.status, 200)
+      assert.strictEqual(response.body.text, text)
     })
 
     it('should not be able to update comment of other users', async () => {
@@ -159,13 +143,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .put(`/posts/${post.id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: faker.lorem.sentence() })
+      const response = await request('PUT', `/posts/${post.id}/comments/${comment.id}`, {
+        token,
+        body: { text: faker.lorem.sentence() }
+      })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
 
     it('should not be able to update a comment that does not exist', async () => {
@@ -174,13 +158,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/posts/${post.id}/comments/9999`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: faker.lorem.sentence() })
+      const response = await request('PUT', `/posts/${post.id}/comments/9999`, {
+        token,
+        body: { text: faker.lorem.sentence() }
+      })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'Resource not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'Resource not found' })
     })
 
     it('should not be able to update a comment through another post', async () => {
@@ -190,13 +174,13 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .put(`/posts/${posts[1].id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ text: faker.lorem.sentence() })
+      const response = await request('PUT', `/posts/${posts[1].id}/comments/${comment.id}`, {
+        token,
+        body: { text: faker.lorem.sentence() }
+      })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'Resource not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'Resource not found' })
     })
 
     it('should not be able to change the owner or the post of your comment', async () => {
@@ -209,17 +193,17 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .put(`/posts/${posts[0].id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({
+      const response = await request('PUT', `/posts/${posts[0].id}/comments/${comment.id}`, {
+        token,
+        body: {
           text: faker.lorem.sentence(),
           userId: users[1].id,
           postId: posts[1].id
-        })
+        }
+      })
 
-      expect(response.status).toEqual(400)
-      expect(response.body).toEqual({
+      assert.strictEqual(response.status, 400)
+      assert.deepStrictEqual(response.body, {
         errors: [
           { messages: ['"userId" is not allowed'], field: 'userId' },
           { messages: ['"postId" is not allowed'], field: 'postId' }
@@ -227,8 +211,8 @@ describe('Comments Resource', () => {
       })
 
       const stored = await CommentRepository.findById(comment.id)
-      expect(stored.userId).toEqual(users[0].id)
-      expect(stored.postId).toEqual(posts[0].id)
+      assert.strictEqual(stored.userId, users[0].id)
+      assert.strictEqual(stored.postId, posts[0].id)
     })
   })
 
@@ -240,12 +224,9 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .delete(`/posts/${post.id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/posts/${post.id}/comments/${comment.id}`, { token })
 
-      expect(response.status).toEqual(204)
+      assert.strictEqual(response.status, 204)
     })
 
     it('should not be able to delete comment of other users', async () => {
@@ -259,13 +240,10 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(users[0])
 
-      const response = await request(app)
-        .delete(`/posts/${post.id}/comments/${comment.id}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/posts/${post.id}/comments/${comment.id}`, { token })
 
-      expect(response.status).toEqual(403)
-      expect(response.body).toEqual({ message: 'Not allowed' })
+      assert.strictEqual(response.status, 403)
+      assert.deepStrictEqual(response.body, { message: 'Not allowed' })
     })
 
     it('should not be able to delete a comment that does not exist', async () => {
@@ -274,13 +252,10 @@ describe('Comments Resource', () => {
 
       const token = jwt.generate(user)
 
-      const response = await request(app)
-        .delete(`/posts/${post.id}/comments/9999`)
-        .set('Authorization', `Bearer ${token}`)
-        .send()
+      const response = await request('DELETE', `/posts/${post.id}/comments/9999`, { token })
 
-      expect(response.status).toEqual(404)
-      expect(response.body).toEqual({ message: 'Resource not found' })
+      assert.strictEqual(response.status, 404)
+      assert.deepStrictEqual(response.body, { message: 'Resource not found' })
     })
   })
 })

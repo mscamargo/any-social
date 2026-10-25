@@ -1,8 +1,9 @@
-const request = require('supertest')
+const { describe, it, beforeEach } = require('node:test')
+const assert = require('node:assert/strict')
 
 const truncateTables = require('../utils/truncate-tables')
 const factory = require('../utils/factories')
-const app = require('../../src/app')
+const request = require('../utils/request')
 
 describe('Authentication Resource', () => {
   beforeEach(async () => {
@@ -13,37 +14,37 @@ describe('Authentication Resource', () => {
     const password = 'somepassword'
     const user = await factory.create('User', { password })
 
-    const response = await request(app)
-      .post('/login')
-      .send({
+    const response = await request('POST', '/login', {
+      body: {
         email: user.email,
         password
-      })
+      }
+    })
 
-    expect(response.status).toEqual(200)
-    expect(response.body).toHaveProperty('token')
+    assert.strictEqual(response.status, 200)
+    assert.ok('token' in response.body)
   })
 
   it('should not be able to authenticate with invalid password', async () => {
     const user = await factory.create('User', { password: 'storedpassword' })
 
-    const response = await request(app)
-      .post('/login')
-      .send({
+    const response = await request('POST', '/login', {
+      body: {
         email: user.email,
         password: 'invalidpassword'
-      })
+      }
+    })
 
-    expect(response.status).toEqual(401)
-    expect(response.body).toEqual({ message: 'Invalid password' })
+    assert.strictEqual(response.status, 401)
+    assert.deepStrictEqual(response.body, { message: 'Invalid password' })
   })
 
   it('should not be able to authenticate with nonexistent email', async () => {
-    const response = await request(app)
-      .post('/login')
-      .send({ email: 'nonexistent@email.com', password: 'passwd' })
+    const response = await request('POST', '/login', {
+      body: { email: 'nonexistent@email.com', password: 'passwd' }
+    })
 
-    expect(response.status).toEqual(401)
-    expect(response.body).toEqual({ message: 'E-mail not found' })
+    assert.strictEqual(response.status, 401)
+    assert.deepStrictEqual(response.body, { message: 'E-mail not found' })
   })
 })

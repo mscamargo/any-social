@@ -1,39 +1,44 @@
-const request = require('supertest')
+const { describe, it } = require('node:test')
+const assert = require('node:assert/strict')
 
-const app = require('../../src/app')
+const request = require('../utils/request')
 
 describe('CORS', () => {
   it('should allow any origin on regular responses', async () => {
-    const response = await request(app)
-      .get('/posts')
-      .set('Origin', 'https://example.com')
+    const response = await request('GET', '/posts', {
+      headers: { Origin: 'https://example.com' }
+    })
 
-    expect(response.headers['access-control-allow-origin']).toBe('*')
-    expect(response.headers['access-control-allow-methods']).toBeUndefined()
+    assert.strictEqual(response.headers.get('access-control-allow-origin'), '*')
+    assert.strictEqual(response.headers.get('access-control-allow-methods'), null)
   })
 
   it('should answer preflight requests', async () => {
-    const response = await request(app)
-      .options('/posts')
-      .set('Origin', 'https://example.com')
-      .set('Access-Control-Request-Method', 'POST')
-      .set('Access-Control-Request-Headers', 'authorization,content-type')
+    const response = await request('OPTIONS', '/posts', {
+      headers: {
+        Origin: 'https://example.com',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'authorization,content-type'
+      }
+    })
 
-    expect(response.status).toBe(204)
-    expect(response.headers['access-control-allow-origin']).toBe('*')
-    expect(response.headers['access-control-allow-methods']).toBe('GET,HEAD,PUT,PATCH,POST,DELETE')
-    expect(response.headers['access-control-allow-headers']).toBe('authorization,content-type')
-    expect(response.headers.vary).toBe('Access-Control-Request-Headers')
-    expect(response.text).toBe('')
+    assert.strictEqual(response.status, 204)
+    assert.strictEqual(response.headers.get('access-control-allow-origin'), '*')
+    assert.strictEqual(response.headers.get('access-control-allow-methods'), 'GET,HEAD,PUT,PATCH,POST,DELETE')
+    assert.strictEqual(response.headers.get('access-control-allow-headers'), 'authorization,content-type')
+    assert.strictEqual(response.headers.get('vary'), 'Access-Control-Request-Headers')
+    assert.strictEqual(response.text, '')
   })
 
   it('should omit allowed headers when the preflight requests none', async () => {
-    const response = await request(app)
-      .options('/posts')
-      .set('Origin', 'https://example.com')
-      .set('Access-Control-Request-Method', 'GET')
+    const response = await request('OPTIONS', '/posts', {
+      headers: {
+        Origin: 'https://example.com',
+        'Access-Control-Request-Method': 'GET'
+      }
+    })
 
-    expect(response.status).toBe(204)
-    expect(response.headers['access-control-allow-headers']).toBeUndefined()
+    assert.strictEqual(response.status, 204)
+    assert.strictEqual(response.headers.get('access-control-allow-headers'), null)
   })
 })
