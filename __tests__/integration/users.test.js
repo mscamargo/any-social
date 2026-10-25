@@ -1,10 +1,10 @@
 const { describe, it, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
-const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const { createUser, createMany } = require('../utils/factories')
+const fake = require('../utils/fake')
 const jwt = require('../../src/utils/jwt')
 const UserRepository = require('../../src/repositories/UserRepository')
 
@@ -85,10 +85,7 @@ describe('Users Resource', () => {
     })
 
     it('should be able to view other users account if authenticated', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@gmail.com' },
-        { username: 'user1', email: 'user1@gmail.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const token = jwt.generate(users[0])
 
@@ -102,10 +99,10 @@ describe('Users Resource', () => {
     it('should be able to create user with valid attributes', async () => {
       const response = await request('POST', '/users', {
         body: {
-          username: faker.internet.userName(),
-          email: faker.internet.email(),
-          title: faker.person.fullName(),
-          password: faker.internet.password()
+          username: fake.username(),
+          email: fake.email(),
+          title: fake.name(),
+          password: fake.password()
         }
       })
 
@@ -131,8 +128,8 @@ describe('Users Resource', () => {
       const response = await request('POST', '/users', {
         body: {
           username,
-          email: faker.internet.email(),
-          password: faker.internet.password()
+          email: fake.email(),
+          password: fake.password()
         }
       })
 
@@ -147,9 +144,9 @@ describe('Users Resource', () => {
 
       const response = await request('POST', '/users', {
         body: {
-          username: faker.internet.userName(),
+          username: fake.username(),
           email,
-          password: faker.internet.password()
+          password: fake.password()
         }
       })
 
@@ -178,7 +175,7 @@ describe('Users Resource', () => {
       const response = await request('PUT', `/users/${user.id}`, {
         token,
         body: {
-          username: faker.internet.userName()
+          username: fake.username()
         }
       })
 
@@ -186,17 +183,14 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to update account of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@gmail.com' },
-        { username: 'user1', email: 'user1@gmail.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const token = jwt.generate(users[0])
 
       const response = await request('PUT', `/users/${users[1].id}`, {
         token,
         body: {
-          username: faker.internet.userName()
+          username: fake.username()
         }
       })
 
@@ -212,7 +206,7 @@ describe('Users Resource', () => {
       const response = await request('PUT', `/users/${user.id}`, {
         token,
         body: {
-          username: faker.internet.userName(),
+          username: fake.username(),
           id: user.id + 1,
           createdAt: '2000-01-01T00:00:00.000Z'
         }
@@ -251,10 +245,7 @@ describe('Users Resource', () => {
     })
 
     it('should not be able to delete account of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@gmail.com' },
-        { username: 'user1', email: 'user1@gmail.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const token = jwt.generate(users[0])
 

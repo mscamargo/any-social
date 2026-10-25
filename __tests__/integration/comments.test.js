@@ -1,10 +1,10 @@
 const { describe, it, beforeEach } = require('node:test')
 const assert = require('node:assert/strict')
-const { faker } = require('@faker-js/faker')
 
 const request = require('../utils/request')
 const truncateTables = require('../utils/truncate-tables')
 const { createUser, createPost, createComment, createMany } = require('../utils/factories')
+const fake = require('../utils/fake')
 const jwt = require('../../src/utils/jwt')
 const CommentRepository = require('../../src/repositories/CommentRepository')
 
@@ -49,7 +49,7 @@ describe('Comments Resource', () => {
       const post = await createPost({ userId: user.id })
 
       const token = jwt.generate(user)
-      const text = faker.lorem.sentence()
+      const text = fake.text()
 
       const response = await request('POST', `/posts/${post.id}/comments`, { token, body: { text } })
 
@@ -64,7 +64,7 @@ describe('Comments Resource', () => {
 
       const response = await request('POST', '/posts/9999/comments', {
         token,
-        body: { text: faker.lorem.sentence() }
+        body: { text: fake.text() }
       })
 
       assert.strictEqual(response.status, 404)
@@ -124,7 +124,7 @@ describe('Comments Resource', () => {
       const comment = await createComment({ postId: post.id, userId: user.id })
 
       const token = jwt.generate(user)
-      const text = faker.lorem.sentence()
+      const text = fake.text()
 
       const response = await request('PUT', `/posts/${post.id}/comments/${comment.id}`, { token, body: { text } })
 
@@ -133,10 +133,7 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to update comment of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const post = await createPost({ userId: users[1].id })
       const comment = await createComment({ postId: post.id, userId: users[1].id })
@@ -145,7 +142,7 @@ describe('Comments Resource', () => {
 
       const response = await request('PUT', `/posts/${post.id}/comments/${comment.id}`, {
         token,
-        body: { text: faker.lorem.sentence() }
+        body: { text: fake.text() }
       })
 
       assert.strictEqual(response.status, 403)
@@ -160,7 +157,7 @@ describe('Comments Resource', () => {
 
       const response = await request('PUT', `/posts/${post.id}/comments/9999`, {
         token,
-        body: { text: faker.lorem.sentence() }
+        body: { text: fake.text() }
       })
 
       assert.strictEqual(response.status, 404)
@@ -176,7 +173,7 @@ describe('Comments Resource', () => {
 
       const response = await request('PUT', `/posts/${posts[1].id}/comments/${comment.id}`, {
         token,
-        body: { text: faker.lorem.sentence() }
+        body: { text: fake.text() }
       })
 
       assert.strictEqual(response.status, 404)
@@ -184,10 +181,7 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to change the owner or the post of your comment', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
       const posts = await createMany(createPost, 2, { userId: users[1].id })
       const comment = await createComment({ postId: posts[0].id, userId: users[0].id })
 
@@ -196,7 +190,7 @@ describe('Comments Resource', () => {
       const response = await request('PUT', `/posts/${posts[0].id}/comments/${comment.id}`, {
         token,
         body: {
-          text: faker.lorem.sentence(),
+          text: fake.text(),
           userId: users[1].id,
           postId: posts[1].id
         }
@@ -230,10 +224,7 @@ describe('Comments Resource', () => {
     })
 
     it('should not be able to delete comment of other users', async () => {
-      const users = await createMany(createUser, 2, [
-        { username: 'user0', email: 'user0@email.com' },
-        { username: 'user1', email: 'user1@email.com' }
-      ])
+      const users = await createMany(createUser, 2)
 
       const post = await createPost({ userId: users[1].id })
       const comment = await createComment({ postId: post.id, userId: users[1].id })
