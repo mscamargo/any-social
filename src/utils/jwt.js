@@ -1,14 +1,54 @@
-const jwt = require('jsonwebtoken')
+const { createHmac, timingSafeEqual } = require('node:crypto')
 const { SECRET_KEY } = require('../config/env')
 
+const EXPIRES_IN = 86400
+
+const encode = data => Buffer.from(JSON.stringify(data)).toString('base64url')
+
+const parse = segment => {
+  try {
+    return JSON.parse(Buffer.from(segment, 'base64url').toString())
+  } catch (e) {
+    return null
+  }
+}
+
+const sign = (input, secret) => createHmac('sha256', secret).update(input).digest('base64url')
+
+const decode = token => {
+  if (typeof token !== 'string') return null
+
+  const [, payload] = token.split('.')
+
+  return payload ? parse(payload) : null
+}
+
 module.exports = {
-  generate: user => jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: 86400 }),
-  verify: token => {
-    try {
-      return !!jwt.verify(token, SECRET_KEY)
-    } catch (e) {
-      return false
-    }
+  sign,
+  generate: user => {
+    const iat = Math.floor(Date.now() / 1000)
+    const input = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ id: user.id, iat, exp: iat + EXPIRES_IN })}`
+
+    return `${input}.${sign(input, SECRET_KEY)}`
   },
-  decode: token => jwt.decode(token)
+  verify: token => {
+    if (typeof token !== 'string') return false
+
+    const segments = token.split('.')
+    if (segments.length !== 3) return false
+
+    const [header, payload, signature] = segments
+    const expected = Buffer.from(sign(`${header}.${payload}`, SECRET_KEY))
+    const actual = Buffer.from(signature)
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false
+
+    const { alg } = parse(header) || {}
+    if (alg !== 'HS256') return false
+
+    const { exp } = parse(payload) || {}
+    if (typeof exp !== 'number' || Math.floor(Date.now() / 1000) >= exp) return false
+
+    return true
+  },
+  decode
 }

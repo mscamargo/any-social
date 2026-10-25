@@ -1,5 +1,4 @@
 const { faker } = require('@faker-js/faker')
-const jsonwebtoken = require('jsonwebtoken')
 const request = require('supertest')
 
 const app = require('../../src/app')
@@ -47,7 +46,8 @@ describe('Users Resource', () => {
     it('should not be able to view all users with a token signed with a different secret', async () => {
       const user = await factory.create('User')
 
-      const token = jsonwebtoken.sign({ id: user.id }, 'another_secret', { expiresIn: 86400 })
+      const [header, payload] = jwt.generate(user).split('.')
+      const token = `${header}.${payload}.${jwt.sign(`${header}.${payload}`, 'another_secret')}`
 
       const response = await request(app)
         .get('/users')
