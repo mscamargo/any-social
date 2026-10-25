@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 
-const knex = require('../../src/database/connection')
+const db = require('../../src/database/connection')
 const UserRepository = require('../../src/repositories/UserRepository')
 const { compare } = require('../../src/utils/password')
 const truncateTables = require('../utils/truncate-tables')
@@ -40,7 +40,7 @@ describe('User Repository', () => {
   test('should verify a $2a$ hash created with bcryptjs v2', async () => {
     const legacyHash = '$2a$10$ZEOtVJTYzgPXdhO0k4mewOoAhi15CeMmXhnQ.FH6EBRPV0eTkwKUa' // '123456'
     const { id } = await factory.create('User')
-    await knex('users').where({ id }).update({ password: legacyHash })
+    db.prepare('UPDATE users SET password = ? WHERE id = ?').run(legacyHash, id)
 
     const user = await UserRepository.findById(id)
 

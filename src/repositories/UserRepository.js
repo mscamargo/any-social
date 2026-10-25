@@ -1,4 +1,4 @@
-const knex = require('../database/connection')
+const db = require('../database/connection')
 const timestamp = require('../database/timestamp')
 const { hash } = require('../utils/password')
 const UniqueConstraintError = require('../exceptions/UniqueConstraintError')
@@ -21,10 +21,13 @@ const toUser = row =>
       }
     : null
 
+// SQLite's extended result code for a UNIQUE constraint violation.
+const SQLITE_CONSTRAINT_UNIQUE = 2067
+
 const rethrowUniqueViolation = error => {
   const [, field] = /UNIQUE constraint failed: users\.(\w+)/.exec(error.message) || []
 
-  if (error.code === 'SQLITE_CONSTRAINT' && UNIQUE_MESSAGES[field]) {
+  if (error.errcode === SQLITE_CONSTRAINT_UNIQUE && UNIQUE_MESSAGES[field]) {
     throw new UniqueConstraintError(field, UNIQUE_MESSAGES[field])
   }
 
@@ -33,41 +36,42 @@ const rethrowUniqueViolation = error => {
 
 class UserRepository {
   async findById (id) {
-    return toUser(await knex('users').where({ id }).first())
+    return toUser(db.prepare('SELECT * FROM users WHERE id = ?').get(id))
   }
 
   async findByEmail (email) {
-    return toUser(await knex('users').where({ email }).first())
+    return toUser(db.prepare('SELECT * FROM users WHERE email = ?').get(email))
   }
 
   async findByIds (ids) {
-    const rows = await knex('users').whereIn('id', ids)
+    const rows = db.prepare('SELECT * FROM users WHERE id IN (SELECT value FROM json_each(?))').all(JSON.stringify(ids))
 
     return rows.map(toUser)
   }
 
   async list () {
-    const rows = await knex('users').orderBy('id')
+    const rows = db.prepare('SELECT * FROM users ORDER BY id').all()
 
     return rows.map(toUser)
   }
 
   async create ({ username, email, password, title }) {
     const now = timestamp()
+    const hashed = await hash(password)
 
-    const [row] = await knex('users')
-      .insert({
-        username,
-        email,
-        password: await hash(password),
-        title,
-        created_at: now,
-        updated_at: now
-      })
-      .returning('*')
-      .catch(rethrowUniqueViolation)
+    try {
+      const row = db
+        .prepare(
+          `INSERT INTO users (username, email, password, title, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)
+           RETURNING *`
+        )
+        .get(username, email, hashed, title === undefined ? null : title, now, now)
 
-    return toUser(row)
+      return toUser(row)
+    } catch (error) {
+      rethrowUniqueViolation(error)
+    }
   }
 
   // Leaves out fields that are undefined, so callers can pass a partial update.
@@ -80,17 +84,24 @@ class UserRepository {
       changes.password = await hash(password)
     }
 
-    const [row] = await knex('users')
-      .where({ id })
-      .update({ ...changes, updated_at: timestamp() })
-      .returning('*')
-      .catch(rethrowUniqueViolation)
+    changes.updated_at = timestamp()
 
-    return toUser(row)
+    // The column names come from the fixed list above, never from the caller.
+    const assignments = Object.keys(changes).map(column => `${column} = ?`).join(', ')
+
+    try {
+      const row = db
+        .prepare(`UPDATE users SET ${assignments} WHERE id = ? RETURNING *`)
+        .get(...Object.values(changes), id)
+
+      return toUser(row)
+    } catch (error) {
+      rethrowUniqueViolation(error)
+    }
   }
 
   async remove (id) {
-    return knex('users').where({ id }).del()
+    return db.prepare('DELETE FROM users WHERE id = ?').run(id).changes
   }
 }
 

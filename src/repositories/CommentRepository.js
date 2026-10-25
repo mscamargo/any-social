@@ -1,4 +1,4 @@
-const knex = require('../database/connection')
+const db = require('../database/connection')
 const timestamp = require('../database/timestamp')
 const UserRepository = require('./UserRepository')
 
@@ -16,11 +16,11 @@ const toComment = row =>
 
 class CommentRepository {
   async findById (id) {
-    return toComment(await knex('comments').where({ id }).first())
+    return toComment(db.prepare('SELECT * FROM comments WHERE id = ?').get(id))
   }
 
   async findByPost (postId) {
-    const rows = await knex('comments').where({ post_id: postId }).orderBy('id')
+    const rows = db.prepare('SELECT * FROM comments WHERE post_id = ? ORDER BY id').all(postId)
 
     return rows.map(toComment)
   }
@@ -39,30 +39,27 @@ class CommentRepository {
   async create ({ text, postId, userId }) {
     const now = timestamp()
 
-    const [row] = await knex('comments')
-      .insert({
-        text,
-        post_id: postId,
-        user_id: userId,
-        created_at: now,
-        updated_at: now
-      })
-      .returning('*')
+    const row = db
+      .prepare(
+        `INSERT INTO comments (text, post_id, user_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)
+         RETURNING *`
+      )
+      .get(text, postId, userId, now, now)
 
     return toComment(row)
   }
 
   async update (id, { text }) {
-    const [row] = await knex('comments')
-      .where({ id })
-      .update({ text, updated_at: timestamp() })
-      .returning('*')
+    const row = db
+      .prepare('UPDATE comments SET text = ?, updated_at = ? WHERE id = ? RETURNING *')
+      .get(text, timestamp(), id)
 
     return toComment(row)
   }
 
   async remove (id) {
-    return knex('comments').where({ id }).del()
+    return db.prepare('DELETE FROM comments WHERE id = ?').run(id).changes
   }
 }
 

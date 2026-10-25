@@ -1,4 +1,4 @@
-const knex = require('../database/connection')
+const db = require('../database/connection')
 const timestamp = require('../database/timestamp')
 const UserRepository = require('./UserRepository')
 const CommentRepository = require('./CommentRepository')
@@ -16,7 +16,7 @@ const toPost = row =>
 
 class PostRepository {
   async findById (id) {
-    return toPost(await knex('posts').where({ id }).first())
+    return toPost(db.prepare('SELECT * FROM posts WHERE id = ?').get(id))
   }
 
   // The post comes with its owner and its comments (without their owners).
@@ -37,7 +37,7 @@ class PostRepository {
 
   // Newest first. Each post comes with its owner, loaded in one extra query.
   async list () {
-    const posts = (await knex('posts').orderBy('created_at', 'desc')).map(toPost)
+    const posts = db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all().map(toPost)
 
     const owners = await UserRepository.findByIds([...new Set(posts.map(({ userId }) => userId))])
     const ownersById = new Map(owners.map(owner => [owner.id, owner]))
@@ -49,29 +49,27 @@ class PostRepository {
   async create ({ text, userId, createdAt }) {
     const now = timestamp()
 
-    const [row] = await knex('posts')
-      .insert({
-        text,
-        user_id: userId,
-        created_at: createdAt ? timestamp(createdAt) : now,
-        updated_at: now
-      })
-      .returning('*')
+    const row = db
+      .prepare(
+        `INSERT INTO posts (text, user_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?)
+         RETURNING *`
+      )
+      .get(text, userId, createdAt ? timestamp(createdAt) : now, now)
 
     return toPost(row)
   }
 
   async update (id, { text }) {
-    const [row] = await knex('posts')
-      .where({ id })
-      .update({ text, updated_at: timestamp() })
-      .returning('*')
+    const row = db
+      .prepare('UPDATE posts SET text = ?, updated_at = ? WHERE id = ? RETURNING *')
+      .get(text, timestamp(), id)
 
     return toPost(row)
   }
 
   async remove (id) {
-    return knex('posts').where({ id }).del()
+    return db.prepare('DELETE FROM posts WHERE id = ?').run(id).changes
   }
 }
 
