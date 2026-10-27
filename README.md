@@ -5,26 +5,28 @@ Simple RESTful API similar to Twitter
 This project requires Node.js 24 or newer. The version is pinned in `.tool-versions`, so with [mise](https://mise.jdx.dev/) installed, run `mise install` in the project folder to get it.
 
 1. Clone this repository
-2. Install dependencies with `npm install`
-3. This project uses SQLite as its development and test database. The dev server stores data in `database.sqlite`; set `DB_STORAGE` to use a different file.
-4. Optionally copy `.env.example` to `.env` to configure the app
-5. Create the schema with `npm run migrate`
-6. Run `npm run dev` to start development server (or `npm start` without auto-reload)
+2. Run `bin/setup`. It installs dependencies, copies `.env.example` to `.env` (unless you already have one) and creates the schema
+3. Run `bin/dev` to start the development server (or `bin/server` without auto-reload)
 
-The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the npm scripts above. Variables already set in your shell take precedence over `.env`.
+This project uses SQLite as its development and test database. The dev server stores data in `database.sqlite`; set `DB_STORAGE` in `.env` to use a different file.
+
+The scripts in `bin/` work from any directory. `npm start`, `npm run dev`, `npm run migrate` and `npm test` call them too.
+
+The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the `bin/` scripts. Variables already set in your shell take precedence over `.env`.
 
 The app talks to SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module, so there's no database driver to install or compile.
 
-Migrations are plain `.sql` files in `src/database/migrations`, applied in file name order by `npm run migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `npm run migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `npm run migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
+Migrations are plain `.sql` files in `src/database/migrations`, applied in file name order by `bin/migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `bin/migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `bin/migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
 
 ## Testing
 _In this release, the tests were designed to run with the SQLite database_
 
-- Run tests: `npm test`
+- Run all tests: `bin/test`
+- Run some test files: `bin/test __tests__/integration/posts.test.js` (paths are relative to the project root)
 
-Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `npm test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
+Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `bin/test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
 
-The test scripts don't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite npm test`.
+`bin/test` doesn't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite bin/test`.
 
 ## Docs
 The documentation of this API can be accessed at https://navenodetest.docs.apiary.io/. This use the [API Blueprint](https://apiblueprint.org/) pattern.

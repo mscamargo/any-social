@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Applies pending migrations. Pass --reset to drop every table first.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+exec node --env-file-if-exists=.env src/database/migrate.js "$@"

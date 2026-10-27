@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Resets the test database and runs the tests. Pass test files to run only
+# those (bin/test __tests__/integration/posts.test.js); with no arguments,
+# every test runs.
+#
+# .env isn't loaded, so a DB_STORAGE set there for development doesn't apply.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+export NODE_ENV=test
+
+node src/database/migrate.js --reset
+
+if [ "$#" -eq 0 ]; then
+  # Quoted so Node expands it, not the shell.
+  set -- '__tests__/**/*.test.js'
+fi
+
+# Tests share test.sqlite, so they run one file at a time.
+exec node --test \
+  --test-concurrency=1 \
+  --experimental-test-coverage \
+  --test-coverage-include='src/**' \
+  --test-coverage-exclude='src/config/**' \
+  --test-coverage-exclude='src/database/**' \
+  --test-coverage-exclude='src/exceptions/**' \
+  "$@"
