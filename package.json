@@ -9,13 +9,12 @@
     "node": ">=24"
   },
   "scripts": {
-    "start": "node --env-file-if-exists=.env server.js",
-    "dev": "node --watch --env-file-if-exists=.env server.js",
-    "migrate": "node --env-file-if-exists=.env src/database/migrate.js",
+    "start": "bin/server",
+    "dev": "bin/dev",
+    "migrate": "bin/migrate",
     "lint": "biome check",
     "format": "biome check --write",
-    "pretest": "NODE_ENV=test node src/database/migrate.js --reset",
-    "test": "NODE_ENV=test node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include='src/**' --test-coverage-exclude='src/config/**' --test-coverage-exclude='src/database/**' --test-coverage-exclude='src/exceptions/**' '__tests__/**/*.test.js'"
+    "test": "bin/test"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3"

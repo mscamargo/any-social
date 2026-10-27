@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Installs dependencies, creates .env and migrates the development database.
+# Safe to run again: it doesn't overwrite an existing .env.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+npm ci
+
+if [ ! -f .env ]; then
+  cp .env.example .env
+  echo 'Created .env from .env.example'
+fi
+
+exec bin/migrate
