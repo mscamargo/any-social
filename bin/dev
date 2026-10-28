@@ -3,4 +3,4 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-exec node --watch --env-file-if-exists=.env server.js
+exec node --watch --env-file-if-exists=.env server.ts

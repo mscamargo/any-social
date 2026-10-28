@@ -14,7 +14,9 @@ The scripts in `bin/` work from any directory. `npm start`, `npm run dev`, `npm 
 
 The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the `bin/` scripts. Variables already set in your shell take precedence over `.env`.
 
-Settings are read in `src/config/env.js`. An empty value counts as unset, and the server refuses to start when a value is invalid (e.g. a `PORT` that isn't a number). `SECRET_KEY` signs the auth tokens: outside production it falls back to a default, but with `NODE_ENV=production` the server won't start without one.
+Settings are read in `src/config/env.ts`. An empty value counts as unset, and the server refuses to start when a value is invalid (e.g. a `PORT` that isn't a number). `SECRET_KEY` signs the auth tokens: outside production it falls back to a default, but with `NODE_ENV=production` the server won't start without one.
+
+The code is TypeScript, run directly by Node: Node strips the type annotations as it loads each file, so there's no build step. That only works for TypeScript syntax that can simply be erased, so enums, namespaces and constructor parameter properties are out (`tsc` rejects them). Imports name the `.ts` file, as in `import db from './connection.ts'`. Node doesn't check the types; run `npm run typecheck` (`tsc`) for that. CI runs it on every pull request.
 
 The app talks to SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module, so there's no database driver to install or compile.
 
@@ -24,7 +26,7 @@ Migrations are plain `.sql` files in `src/database/migrations`, applied in file 
 _In this release, the tests were designed to run with the SQLite database_
 
 - Run all tests: `bin/test`
-- Run some test files: `bin/test __tests__/integration/posts.test.js` (paths are relative to the project root)
+- Run some test files: `bin/test __tests__/integration/posts.test.ts` (paths are relative to the project root)
 
 Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `bin/test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
 
