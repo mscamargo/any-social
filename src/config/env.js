@@ -27,13 +27,11 @@ export function env(key, defaultValue, parse) {
   return value
 }
 
-export const IS_TEST = env('NODE_ENV', 'development') === 'test'
-export const IS_PRODUCTION = env('NODE_ENV', 'development') === 'production'
-export const IS_DEV = !IS_PRODUCTION && !IS_TEST
+export const NODE_ENV = env('NODE_ENV', 'development')
 
 export const PORT = env('PORT', 3000, Number)
 
 // Required in production: the fallback is public in this repository.
-export const SECRET_KEY = env('SECRET_KEY', IS_PRODUCTION ? undefined : 'nave_node_test')
+export const SECRET_KEY = env('SECRET_KEY', NODE_ENV === 'production' ? undefined : 'nave_node_test')
 
-export const DB_STORAGE = env('DB_STORAGE', IS_TEST ? 'test.sqlite' : 'database.sqlite')
+export const DB_STORAGE = env('DB_STORAGE', NODE_ENV === 'test' ? 'test.sqlite' : 'database.sqlite')

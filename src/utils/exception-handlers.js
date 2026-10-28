@@ -1,4 +1,4 @@
-import { IS_DEV, IS_TEST } from '../config/env.js'
+import { NODE_ENV } from '../config/env.js'
 import ApplicationError from '../exceptions/ApplicationError.js'
 import UniqueConstraintError from '../exceptions/UniqueConstraintError.js'
 import ValidationError from '../exceptions/ValidationError.js'
@@ -31,18 +31,14 @@ const applicationErrors = (error, request, response, next) => {
     return next(error)
   }
 
-  const { status, message, stack } = error
-
-  if (IS_DEV) {
-    console.log(stack)
-  }
+  const { status, message } = error
 
   return response.status(status).json({ message })
 }
 
 // Answers every error the handlers before it passed on
 const unexpectedErrors = (error, request, response, next) => {
-  if (!IS_TEST) {
+  if (NODE_ENV !== 'test') {
     console.error(error)
   }
 
