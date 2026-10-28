@@ -27,11 +27,16 @@ export function env(key, defaultValue, parse) {
   return value
 }
 
-export const NODE_ENV = env('NODE_ENV', 'development')
+const NODE_ENV = env('NODE_ENV', 'development')
 
-export const PORT = env('PORT', 3000, Number)
-
-// Required in production: the fallback is public in this repository.
-export const SECRET_KEY = env('SECRET_KEY', NODE_ENV === 'production' ? undefined : 'nave_node_test')
-
-export const DB_STORAGE = env('DB_STORAGE', NODE_ENV === 'test' ? 'test.sqlite' : 'database.sqlite')
+// Frozen so nothing changes it by accident. Reading a key that doesn't exist
+// still returns undefined, so check names against this object.
+export default Object.freeze({
+  env: NODE_ENV,
+  port: env('PORT', 3000, Number),
+  // Required in production: the fallback is public in this repository.
+  secret: env('SECRET_KEY', NODE_ENV === 'production' ? undefined : 'nave_node_test'),
+  db: Object.freeze({
+    filename: env('DB_STORAGE', NODE_ENV === 'test' ? 'test.sqlite' : 'database.sqlite')
+  })
+})

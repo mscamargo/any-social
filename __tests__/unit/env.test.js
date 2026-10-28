@@ -2,18 +2,22 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { afterEach, describe, test } from 'node:test'
 
-import { env } from '../../src/config/env.js'
+import config, { env } from '../../src/config/env.js'
 
 const CONFIG_URL = new URL('../../src/config/env.js', import.meta.url).href
 
-// Loads env.js in a fresh process, since its settings are read once at import.
+// Loads env.js in a fresh process, since its settings are read once at import,
+// and returns the exit status, stderr and the config it built.
 const loadConfig = vars => {
-  const { NODE_ENV, SECRET_KEY, ...rest } = process.env
+  const { NODE_ENV, PORT, SECRET_KEY, DB_STORAGE, ...rest } = process.env
+  const script = `const { default: config } = await import('${CONFIG_URL}'); console.log(JSON.stringify(config))`
 
-  return spawnSync(process.execPath, ['--input-type=module', '-e', `await import('${CONFIG_URL}')`], {
+  const { status, stdout, stderr } = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
     env: { ...rest, ...vars },
     encoding: 'utf8'
   })
+
+  return { status, stderr, config: status === 0 ? JSON.parse(stdout) : undefined }
 }
 
 describe('env', () => {
@@ -89,15 +93,51 @@ describe('config', () => {
   })
 
   test('should start in production with a SECRET_KEY', () => {
-    const { status, stderr } = loadConfig({ NODE_ENV: 'production', SECRET_KEY: 'a-real-secret' })
+    const { status, stderr, config } = loadConfig({ NODE_ENV: 'production', SECRET_KEY: 'a-real-secret' })
 
     assert.equal(status, 0, stderr)
+    assert.equal(config.secret, 'a-real-secret')
   })
 
-  test('should fall back to the default SECRET_KEY outside production', () => {
-    const { status, stderr } = loadConfig({})
+  test('should fall back to the defaults in development', () => {
+    const { status, stderr, config } = loadConfig({})
 
     assert.equal(status, 0, stderr)
+    assert.deepEqual(config, {
+      env: 'development',
+      port: 3000,
+      secret: 'nave_node_test',
+      db: { filename: 'database.sqlite' }
+    })
+  })
+
+  test('should read every setting from the environment', () => {
+    const { status, stderr, config } = loadConfig({
+      NODE_ENV: 'production',
+      PORT: '8080',
+      SECRET_KEY: 'a-real-secret',
+      DB_STORAGE: 'other.sqlite'
+    })
+
+    assert.equal(status, 0, stderr)
+    assert.deepEqual(config, {
+      env: 'production',
+      port: 8080,
+      secret: 'a-real-secret',
+      db: { filename: 'other.sqlite' }
+    })
+  })
+
+  test('should use test.sqlite in tests', () => {
+    const { status, stderr, config } = loadConfig({ NODE_ENV: 'test' })
+
+    assert.equal(status, 0, stderr)
+    assert.equal(config.db.filename, 'test.sqlite')
+  })
+
+  test('should be frozen', () => {
+    assert.ok(Object.isFrozen(config))
+    assert.ok(Object.isFrozen(config.db))
   })
 
   test('should reject a PORT that is not a number', () => {

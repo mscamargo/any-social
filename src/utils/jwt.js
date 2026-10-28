@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { SECRET_KEY } from '../config/env.js'
+import config from '../config/env.js'
 
 const EXPIRES_IN = 86400
 
@@ -27,7 +27,7 @@ export const generate = user => {
   const iat = Math.floor(Date.now() / 1000)
   const input = `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode({ id: user.id, iat, exp: iat + EXPIRES_IN })}`
 
-  return `${input}.${sign(input, SECRET_KEY)}`
+  return `${input}.${sign(input, config.secret)}`
 }
 
 export const verify = token => {
@@ -37,7 +37,7 @@ export const verify = token => {
   if (segments.length !== 3) return false
 
   const [header, payload, signature] = segments
-  const expected = Buffer.from(sign(`${header}.${payload}`, SECRET_KEY))
+  const expected = Buffer.from(sign(`${header}.${payload}`, config.secret))
   const actual = Buffer.from(signature)
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false
 

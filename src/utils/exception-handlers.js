@@ -1,4 +1,4 @@
-import { NODE_ENV } from '../config/env.js'
+import config from '../config/env.js'
 import ApplicationError from '../exceptions/ApplicationError.js'
 import UniqueConstraintError from '../exceptions/UniqueConstraintError.js'
 import ValidationError from '../exceptions/ValidationError.js'
@@ -38,7 +38,7 @@ const applicationErrors = (error, request, response, next) => {
 
 // Answers every error the handlers before it passed on
 const unexpectedErrors = (error, request, response, next) => {
-  if (NODE_ENV !== 'test') {
+  if (config.env !== 'test') {
     console.error(error)
   }
 
