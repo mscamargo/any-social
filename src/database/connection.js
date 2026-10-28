@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite'
-import { DB_STORAGE } from '../config/env.js'
+import config from '../config/env.js'
 
-const db = new DatabaseSync(DB_STORAGE)
+const db = new DatabaseSync(config.db.filename)
 
 // SQLite leaves foreign keys off per connection; without this,
 // ON DELETE CASCADE does nothing.
