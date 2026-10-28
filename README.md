@@ -14,6 +14,8 @@ The scripts in `bin/` work from any directory. `npm start`, `npm run dev`, `npm 
 
 The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the `bin/` scripts. Variables already set in your shell take precedence over `.env`.
 
+Settings are read in `src/config/env.js`. An empty value counts as unset, and the server refuses to start when a value is invalid (e.g. a `PORT` that isn't a number). `SECRET_KEY` signs the auth tokens: outside production it falls back to a default, but with `NODE_ENV=production` the server won't start without one.
+
 The app talks to SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module, so there's no database driver to install or compile.
 
 Migrations are plain `.sql` files in `src/database/migrations`, applied in file name order by `bin/migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `bin/migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `bin/migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
