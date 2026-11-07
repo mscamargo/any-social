@@ -12,15 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Reads the version from packageManager in package.json.
+      - uses: pnpm/action-setup@v6
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: .tool-versions
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - run: npx biome ci
+      - run: pnpm exec biome ci
 
-      - run: npx tsc
-
-      - run: npm test
+      - run: pnpm turbo run typecheck test

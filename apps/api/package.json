@@ -1,0 +1,22 @@
+{
+  "name": "@any-social/api",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "bin/server",
+    "dev": "bin/dev",
+    "migrate": "bin/migrate",
+    "typecheck": "tsc",
+    "test": "bin/test"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}

@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-npm ci
+pnpm install --frozen-lockfile
 
 if [ ! -f .env ]; then
   cp .env.example .env
