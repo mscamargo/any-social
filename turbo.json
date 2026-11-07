@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  "tasks": {
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "env": ["DB_STORAGE"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": ["NODE_ENV", "PORT", "SECRET_KEY", "DB_STORAGE"]
+    }
+  }
+}

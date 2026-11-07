@@ -1,36 +1,52 @@
 # any-social
 Simple RESTful API similar to Twitter
 
+## Repository layout
+This is a monorepo managed with [pnpm workspaces](https://pnpm.io/workspaces) and [Turborepo](https://turborepo.com/):
+
+- `apps/api`: the REST API (`@any-social/api`)
+- `apps/*`: other applications, such as a web front end
+- `packages/*`: code shared between apps
+
+Commands run from the repository root fan out to every workspace through Turbo:
+
+- `pnpm dev`: start every app in development mode
+- `pnpm typecheck`: type-check every workspace
+- `pnpm test`: run every workspace's tests
+- `pnpm lint` / `pnpm format`: run [Biome](https://biomejs.dev/) over the whole repository
+
+Turbo caches `typecheck` and `test`, so running them again without changes replays the previous result. To run a command in a single workspace, use `pnpm --filter`, e.g. `pnpm --filter @any-social/api migrate`.
+
 ## Running this project
-This project requires Node.js 24 or newer. The version is pinned in `.tool-versions`, so with [mise](https://mise.jdx.dev/) installed, run `mise install` in the project folder to get it.
+This project requires Node.js 24 or newer and pnpm. Both versions are pinned in `.tool-versions`, so with [mise](https://mise.jdx.dev/) installed, run `mise install` in the project folder to get them. The pnpm version is also pinned in the `packageManager` field of `package.json`.
 
 1. Clone this repository
-2. Run `bin/setup`. It installs dependencies, copies `.env.example` to `.env` (unless you already have one) and creates the schema
-3. Run `bin/dev` to start the development server (or `bin/server` without auto-reload)
+2. Run `apps/api/bin/setup`. It installs dependencies for the whole workspace, copies `apps/api/.env.example` to `apps/api/.env` (unless you already have one) and creates the schema
+3. Run `pnpm dev` to start the development server (or `apps/api/bin/server` without auto-reload)
 
-This project uses SQLite as its development and test database. The dev server stores data in `database.sqlite`; set `DB_STORAGE` in `.env` to use a different file.
+This project uses SQLite as its development and test database. The dev server stores data in `apps/api/database.sqlite`; set `DB_STORAGE` in `apps/api/.env` to use a different file.
 
-The scripts in `bin/` work from any directory. `npm start`, `npm run dev`, `npm run migrate` and `npm test` call them too.
+The scripts in `apps/api/bin/` work from any directory and always run inside `apps/api`. The API's `start`, `dev`, `migrate` and `test` package scripts call them too (`pnpm --filter @any-social/api <script>`).
 
 The `.env` file is loaded by Node itself (`--env-file-if-exists`), so it only applies when you go through the `bin/` scripts. Variables already set in your shell take precedence over `.env`.
 
-Settings are read in `src/config/env.ts`. An empty value counts as unset, and the server refuses to start when a value is invalid (e.g. a `PORT` that isn't a number). `SECRET_KEY` signs the auth tokens: outside production it falls back to a default, but with `NODE_ENV=production` the server won't start without one.
+Settings are read in `apps/api/src/config/env.ts`. An empty value counts as unset, and the server refuses to start when a value is invalid (e.g. a `PORT` that isn't a number). `SECRET_KEY` signs the auth tokens: outside production it falls back to a default, but with `NODE_ENV=production` the server won't start without one.
 
-The code is TypeScript, run directly by Node: Node strips the type annotations as it loads each file, so there's no build step. That only works for TypeScript syntax that can simply be erased, so enums, namespaces and constructor parameter properties are out (`tsc` rejects them). Imports name the `.ts` file, as in `import db from './connection.ts'`. Node doesn't check the types; run `npm run typecheck` (`tsc`) for that. CI runs it on every pull request.
+The code is TypeScript, run directly by Node: Node strips the type annotations as it loads each file, so there's no build step. That only works for TypeScript syntax that can simply be erased, so enums, namespaces and constructor parameter properties are out (`tsc` rejects them). Imports name the `.ts` file, as in `import db from './connection.ts'`. Node doesn't check the types; run `pnpm typecheck` (`tsc`) for that. CI runs it on every pull request.
 
 The app talks to SQLite through Node's built-in [`node:sqlite`](https://nodejs.org/api/sqlite.html) module, so there's no database driver to install or compile.
 
-Migrations are plain `.sql` files in `src/database/migrations`, applied in file name order by `bin/migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `bin/migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `bin/migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
+Migrations are plain `.sql` files in `apps/api/src/database/migrations`, applied in file name order by `bin/migrate`, which records each one in the `migrations` table. A database migrated by Knex is picked up as is: the first `bin/migrate` copies its `knex_migrations` history into `migrations` and drops the Knex tables, without re-running anything. If you have a `database.sqlite` or `test.sqlite` created by the old Sequelize migrations, delete it (and run `bin/migrate` again for the dev database): the runner doesn't read Sequelize's migration history.
 
 ## Testing
 _In this release, the tests were designed to run with the SQLite database_
 
-- Run all tests: `bin/test`
-- Run some test files: `bin/test __tests__/integration/posts.test.ts` (paths are relative to the project root)
+- Run all tests: `pnpm test` (or `apps/api/bin/test`)
+- Run some test files: `apps/api/bin/test __tests__/integration/posts.test.ts` (paths are relative to `apps/api`)
 
-Tests use their own SQLite file, `test.sqlite`, so they never touch your development data. `bin/test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
+Tests use their own SQLite file, `apps/api/test.sqlite`, so they never touch your development data. `bin/test` resets that file's schema before every run (dropping every table and re-applying all migrations), so a run that failed and left it migrated doesn't break the next one.
 
-`bin/test` doesn't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite bin/test`.
+`bin/test` doesn't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite pnpm test`. Turbo includes `DB_STORAGE` in the cache key, so changing it reruns the tests.
 
 ## Docs
 The documentation of this API can be accessed at https://navenodetest.docs.apiary.io/. This use the [API Blueprint](https://apiblueprint.org/) pattern.
