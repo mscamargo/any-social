@@ -74,8 +74,6 @@ Make each commit one logical change, so it can be reviewed and reverted on its o
 - **Locally**: a `commit-msg` hook, installed by [husky](https://typicode.github.io/husky/) when you run `pnpm install`, rejects a bad message before the commit is made. Fix the message and commit again. To check a message by hand, run `echo "feat: add likes" | pnpm exec commitlint`.
 - **On pull requests**: the `commitlint` job of `PR checks` lints every commit of the PR, including commits made without the hook.
 
-The hook runs `pnpm`, so it needs the pinned Node and pnpm on your `PATH`. If your git client or editor doesn't load mise, the hook fails with `pnpm: not found`; commit from a terminal where mise is active instead.
-
 To fix a bad message on a branch that isn't merged yet, change the commit (`git commit --amend` for the last one, an interactive rebase for older ones) and push with `--force-with-lease`.
 
 AI coding agents working in this repository can use the `git-commit` skill in `.claude/skills/`, which writes messages in this format.
