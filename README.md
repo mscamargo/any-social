@@ -48,11 +48,8 @@ Tests use their own SQLite file, `apps/api/test.sqlite`, so they never touch you
 
 `bin/test` doesn't load the `.env` file, so a `DB_STORAGE` set there for development doesn't apply to tests. To run tests against a different file, set it on the command line, e.g. `DB_STORAGE=other.sqlite pnpm test`. Turbo includes `DB_STORAGE` in the cache key, so changing it reruns the tests.
 
-## Commit messages
-Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(api): add a health check endpoint` or `fix: reject empty passwords`. [commitlint](https://commitlint.js.org/) checks them with the rules in `commitlint.config.js`:
-
-- Locally, a `commit-msg` hook rejects a bad message before the commit is made. `pnpm install` sets up the hook through [husky](https://typicode.github.io/husky/).
-- On pull requests, the `commitlint` job in `PR checks` lints every commit of the PR.
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch and pull request workflow. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(api): add a health check endpoint`; a git hook and a CI job check them.
 
 ## Docs
 The documentation of this API can be accessed at https://navenodetest.docs.apiary.io/. This use the [API Blueprint](https://apiblueprint.org/) pattern.
