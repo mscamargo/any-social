@@ -2,4 +2,7 @@ packages:
   - apps/*
   - packages/*
 
+allowBuilds:
+  "@scarf/scarf": false
+
 engineStrict: true
