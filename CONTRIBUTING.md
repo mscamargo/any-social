@@ -92,4 +92,4 @@ pnpm test
 - Fill in the sections of the PR template, `.github/pull_request_template.md`: what and why, how, testing, breaking changes and review notes. Link the issue it closes with `Closes #123`. GitHub applies the template when you open a PR on the website, but `gh pr create` with `--body` or `--body-file` doesn't, so when you or an agent open a PR from the command line, write the body from the template's sections.
 - `PR checks` must pass: commitlint, Biome, the type check and the tests.
 - Pull requests are merged with a merge commit, so every commit of the branch lands on `master` as it is. Clean up the branch history (squash fixups, reword messages) before it's merged.
-- If your change alters the API's behavior or response format, update the README and the [API docs](https://navenodetest.docs.apiary.io/) in the same pull request.
+- If your change alters the API's behavior or response format, update the README and the OpenAPI spec, [`apps/api/openapi.json`](apps/api/openapi.json), in the same pull request. The tests fail when a route or a response doesn't match the spec.

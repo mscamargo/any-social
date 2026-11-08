@@ -52,7 +52,9 @@ Tests use their own SQLite file, `apps/api/test.sqlite`, so they never touch you
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch and pull request workflow. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(api): add a health check endpoint`; a git hook and a CI job check them.
 
 ## Docs
-The documentation of this API can be accessed at https://navenodetest.docs.apiary.io/. This use the [API Blueprint](https://apiblueprint.org/) pattern.
+The API is documented in [`apps/api/openapi.json`](apps/api/openapi.json), an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) spec. To browse it, open it in the [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/mscamargo/any-social/master/apps/api/openapi.json) (that link shows the spec on `master`), or paste the file into any other OpenAPI viewer.
+
+The tests keep the spec honest: `apps/api/__tests__/integration/openapi.test.ts` fails when a route in `apps/api/src/routes.ts` is missing from the spec (or the spec lists one that doesn't exist), and it and `response-contract.test.ts` check the responses they get against the schema the spec gives for their status code. The checker in `apps/api/__tests__/utils/openapi.ts` only understands the schema keywords the spec already uses (`type`, `properties`, `required`, `additionalProperties`, `items`, `format: date-time`, `minLength`, `maxLength` and local `$ref`s), so stick to those or extend it.
 
 ### Response format
 All JSON response keys are camelCase:
