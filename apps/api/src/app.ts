@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import Router, { type Request, type Response } from './utils/router.ts'
 import routes from './routes.ts'
+import docs from './docs.ts'
 import cors from './middlewares/cors.ts'
 import jsonBody from './middlewares/json-body.ts'
 import exceptionHandlers, { type ErrorHandler } from './utils/exception-handlers.ts'
@@ -53,8 +54,10 @@ class App {
     this.router.use(cors, jsonBody)
   }
 
+  // The docs come first: routes.ts asks for a token on every path it doesn't
+  // answer before its auth middleware, /docs included.
   routes() {
-    this.router.use(routes.handle)
+    this.router.use(docs.handle, routes.handle)
   }
 
   exceptions() {

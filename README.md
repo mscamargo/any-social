@@ -52,7 +52,11 @@ Tests use their own SQLite file, `apps/api/test.sqlite`, so they never touch you
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch and pull request workflow. Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat(api): add a health check endpoint`; a git hook and a CI job check them.
 
 ## Docs
-The API is documented in [`apps/api/openapi.json`](apps/api/openapi.json), an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) spec. To browse it, open it in the [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/mscamargo/any-social/master/apps/api/openapi.json) (that link shows the spec on `master`), or paste the file into any other OpenAPI viewer.
+The API is documented in [`apps/api/openapi.json`](apps/api/openapi.json), an [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0) spec.
+
+The API serves it with [Swagger UI](https://swagger.io/tools/swagger-ui/) at `/docs`, e.g. http://localhost:3000/docs with `pnpm dev`. No token is needed to open it. "Try it out" sends requests to the server you opened the page on; for private routes, get a token from `POST /login` and paste it into **Authorize**. Swagger UI comes from the `swagger-ui-dist` package, so the page works offline and loads nothing from a CDN. Its `@scarf/scarf` dependency, which reports installs, is kept from running through `allowBuilds` in `pnpm-workspace.yaml`.
+
+To browse the spec without running the API, open it in the [Swagger Editor](https://editor.swagger.io/?url=https://raw.githubusercontent.com/mscamargo/any-social/master/apps/api/openapi.json) (that link shows the spec on `master`), or paste the file into any other OpenAPI viewer.
 
 The tests keep the spec honest: `apps/api/__tests__/integration/openapi.test.ts` fails when a route in `apps/api/src/routes.ts` is missing from the spec (or the spec lists one that doesn't exist), and it and `response-contract.test.ts` check the responses they get against the schema the spec gives for their status code. The checker in `apps/api/__tests__/utils/openapi.ts` only understands the schema keywords the spec already uses (`type`, `properties`, `required`, `additionalProperties`, `items`, `format: date-time`, `minLength`, `maxLength` and local `$ref`s), so stick to those or extend it.
 
