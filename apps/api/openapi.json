@@ -1,0 +1,688 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "any-social API",
+    "version": "1.0.0",
+    "description": "A simple RESTful API similar to Twitter: users write posts and comment on them.\n\nEvery route except `POST /login` and `POST /users` needs a token from `POST /login`, sent as `Authorization: Bearer <token>`. A token is valid for 24 hours.\n\nRequest bodies are JSON (`Content-Type: application/json`). Response keys are camelCase and IDs are numbers.\n\nBesides the responses listed for each operation, any request can get:\n\n- `400` `{ \"message\": \"Malformed JSON body\" }` when the body isn't a JSON object or array, or `{ \"message\": \"Malformed URL\" }` when a URL parameter can't be decoded\n- `404` `{ \"message\": \"Not found\" }` for a path or method no route answers\n- `413` `{ \"message\": \"Request body too large\" }` for a body over 100 KiB\n- `500` `{ \"message\": \"Internal Server Error\" }`",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server (`pnpm dev`)"
+    }
+  ],
+  "tags": [{ "name": "Authentication" }, { "name": "Users" }, { "name": "Posts" }, { "name": "Comments" }],
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Log in",
+        "description": "Returns the user with a token for the other routes.",
+        "operationId": "login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Credentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Session" }
+              }
+            }
+          },
+          "401": {
+            "description": "No user has this e-mail (`E-mail not found`), or the password is wrong (`Invalid password`)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "message": "Invalid password" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "List users",
+        "description": "Returns every user, by ID.",
+        "operationId": "listUsers",
+        "responses": {
+          "200": {
+            "description": "The users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Sign up",
+        "description": "Creates a user. Usernames and e-mails are unique.",
+        "operationId": "createUser",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewUser" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The user was created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": {
+            "description": "The body is invalid, or the username or e-mail is already in use",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationErrors" },
+                "example": { "errors": [{ "messages": ["E-mail is already in use"], "field": "email" }] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get a user",
+        "operationId": "getUser",
+        "responses": {
+          "200": {
+            "description": "The user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": {
+            "description": "No user has this ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "message": "User not found" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update your user",
+        "description": "Changes the fields given and leaves the others as they are. Users can only update themselves.",
+        "operationId": "updateUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserChanges" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": {
+            "description": "The ID or the body is invalid, or the new username or e-mail is already in use",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationErrors" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete your user",
+        "description": "Users can only delete themselves. Their posts and comments are deleted with them.",
+        "operationId": "deleteUser",
+        "responses": {
+          "204": { "description": "The user was deleted" },
+          "400": { "$ref": "#/components/responses/InvalidId" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/posts": {
+      "get": {
+        "tags": ["Posts"],
+        "summary": "List posts",
+        "description": "Returns every post with its owner, newest first.",
+        "operationId": "listPosts",
+        "responses": {
+          "200": {
+            "description": "The posts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PostWithOwner" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Posts"],
+        "summary": "Create a post",
+        "description": "The post belongs to the logged-in user.",
+        "operationId": "createPost",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PostInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The post was created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationFailed" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/posts/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "tags": ["Posts"],
+        "summary": "Get a post",
+        "description": "Returns the post with its owner and its comments.",
+        "operationId": "getPost",
+        "responses": {
+          "200": {
+            "description": "The post",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PostWithOwnerAndComments" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Posts"],
+        "summary": "Update a post",
+        "description": "Only the post's owner can update it.",
+        "operationId": "updatePost",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PostInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated post",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Post" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationFailed" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Posts"],
+        "summary": "Delete a post",
+        "description": "Only the post's owner can delete it. Its comments are deleted with it.",
+        "operationId": "deletePost",
+        "responses": {
+          "204": { "description": "The post was deleted" },
+          "400": { "$ref": "#/components/responses/InvalidId" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/posts/{post_id}/comments": {
+      "parameters": [{ "$ref": "#/components/parameters/post_id" }],
+      "get": {
+        "tags": ["Comments"],
+        "summary": "List a post's comments",
+        "description": "Returns the post's comments with their owners, oldest first. A post that doesn't exist has no comments.",
+        "operationId": "listComments",
+        "responses": {
+          "200": {
+            "description": "The comments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CommentWithOwner" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Comments"],
+        "summary": "Comment on a post",
+        "description": "The comment belongs to the logged-in user.",
+        "operationId": "createComment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CommentInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The comment was created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Comment" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationFailed" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": {
+            "description": "No post has this ID",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "message": "Post not found" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/posts/{post_id}/comments/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/post_id" }, { "$ref": "#/components/parameters/id" }],
+      "put": {
+        "tags": ["Comments"],
+        "summary": "Update a comment",
+        "description": "Only the comment's owner can update it.",
+        "operationId": "updateComment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CommentInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated comment",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Comment" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ValidationFailed" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/CommentNotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Comments"],
+        "summary": "Delete a comment",
+        "description": "Only the comment's owner can delete it.",
+        "operationId": "deleteComment",
+        "responses": {
+          "204": { "description": "The comment was deleted" },
+          "400": { "$ref": "#/components/responses/InvalidId" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/CommentNotFound" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "The token from `POST /login`"
+      }
+    },
+    "parameters": {
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "The resource's ID",
+        "schema": { "type": "integer" }
+      },
+      "post_id": {
+        "name": "post_id",
+        "in": "path",
+        "required": true,
+        "description": "The post's ID",
+        "schema": { "type": "integer" }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "The token is missing (`Token not provided`), invalid or expired (`Invalid or expired token`), or its user no longer exists (`Invalid credentials`)",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "message": "Token not provided" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The resource belongs to another user",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "message": "Not allowed" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No resource has this ID",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "message": "Resource not found" }
+          }
+        }
+      },
+      "CommentNotFound": {
+        "description": "The post has no comment with this ID",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "message": "Resource not found" }
+          }
+        }
+      },
+      "ValidationFailed": {
+        "description": "The ID or the body is invalid",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ValidationErrors" }
+          }
+        }
+      },
+      "InvalidId": {
+        "description": "The ID isn't a number",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ValidationErrors" },
+            "example": { "errors": [{ "messages": ["\"id\" must be a number"], "field": "id" }] }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Credentials": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "example": { "email": "jane@email.com", "password": "secret123" }
+      },
+      "NewUser": {
+        "type": "object",
+        "required": ["username", "email", "password"],
+        "additionalProperties": false,
+        "properties": {
+          "username": { "type": "string", "minLength": 2 },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 }
+        },
+        "example": { "username": "jane", "email": "jane@email.com", "password": "secret123", "title": "Developer" }
+      },
+      "UserChanges": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "username": { "type": "string", "minLength": 2 },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 }
+        },
+        "example": { "title": "Senior developer" }
+      },
+      "PostInput": {
+        "type": "object",
+        "required": ["text"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string", "minLength": 2, "maxLength": 140 }
+        },
+        "example": { "text": "Hello, world!" }
+      },
+      "CommentInput": {
+        "type": "object",
+        "required": ["text"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string", "minLength": 2, "maxLength": 140 }
+        },
+        "example": { "text": "Nice post!" }
+      },
+      "User": {
+        "type": "object",
+        "required": ["id", "username", "email", "title", "createdAt", "updatedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "title": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "id": 1,
+          "username": "jane",
+          "email": "jane@email.com",
+          "title": "Developer",
+          "createdAt": "2026-11-07T12:00:00.000Z",
+          "updatedAt": "2026-11-07T12:00:00.000Z"
+        }
+      },
+      "Session": {
+        "description": "The user, with a token for the other routes",
+        "type": "object",
+        "required": ["id", "username", "email", "title", "createdAt", "updatedAt", "token"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "title": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "token": { "type": "string", "description": "A JWT, valid for 24 hours" }
+        }
+      },
+      "Post": {
+        "type": "object",
+        "required": ["id", "text", "userId", "createdAt", "updatedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "text": { "type": "string" },
+          "userId": { "type": "integer", "description": "The ID of the post's owner" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "id": 1,
+          "text": "Hello, world!",
+          "userId": 1,
+          "createdAt": "2026-11-07T12:00:00.000Z",
+          "updatedAt": "2026-11-07T12:00:00.000Z"
+        }
+      },
+      "PostWithOwner": {
+        "type": "object",
+        "required": ["id", "text", "userId", "createdAt", "updatedAt", "owner"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "text": { "type": "string" },
+          "userId": { "type": "integer", "description": "The ID of the post's owner" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "owner": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "PostWithOwnerAndComments": {
+        "type": "object",
+        "required": ["id", "text", "userId", "createdAt", "updatedAt", "owner", "comments"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "text": { "type": "string" },
+          "userId": { "type": "integer", "description": "The ID of the post's owner" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "owner": { "$ref": "#/components/schemas/User" },
+          "comments": {
+            "type": "array",
+            "description": "The post's comments, oldest first, without their owners",
+            "items": { "$ref": "#/components/schemas/Comment" }
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "required": ["id", "text", "postId", "userId", "createdAt", "updatedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "text": { "type": "string" },
+          "postId": { "type": "integer", "description": "The ID of the post it comments on" },
+          "userId": { "type": "integer", "description": "The ID of the comment's owner" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "id": 1,
+          "text": "Nice post!",
+          "postId": 1,
+          "userId": 2,
+          "createdAt": "2026-11-07T12:00:00.000Z",
+          "updatedAt": "2026-11-07T12:00:00.000Z"
+        }
+      },
+      "CommentWithOwner": {
+        "type": "object",
+        "required": ["id", "text", "postId", "userId", "createdAt", "updatedAt", "owner"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer" },
+          "text": { "type": "string" },
+          "postId": { "type": "integer", "description": "The ID of the post it comments on" },
+          "userId": { "type": "integer", "description": "The ID of the comment's owner" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "owner": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["message"],
+        "additionalProperties": false,
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "ValidationErrors": {
+        "type": "object",
+        "required": ["errors"],
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["messages"],
+              "additionalProperties": false,
+              "properties": {
+                "messages": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "field": {
+                  "type": "string",
+                  "description": "The invalid field. Left out when the whole body is invalid, e.g. not an object."
+                }
+              }
+            }
+          }
+        },
+        "example": { "errors": [{ "messages": ["\"text\" is required"], "field": "text" }] }
+      }
+    }
+  }
+}

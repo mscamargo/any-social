@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 import request from '../utils/request.ts'
 import truncateTables from '../utils/truncate-tables.ts'
 import { createUser, createPost, createComment } from '../utils/factories.ts'
+import { assertMatchesSpec } from '../utils/openapi.ts'
 import * as jwt from '../../src/utils/jwt.ts'
 import type { User } from '../../src/repositories/UserRepository.ts'
 import type { Post } from '../../src/repositories/PostRepository.ts'
@@ -84,6 +85,7 @@ describe('Response contract', () => {
       })
 
       assert.strictEqual(response.status, 201)
+      assertMatchesSpec('POST', '/users', response)
       assert.deepStrictEqual(typed(withoutId(response.body)), {
         username: 'newuser',
         email: 'newuser@email.com',
@@ -107,6 +109,7 @@ describe('Response contract', () => {
       const { token, ...body } = response.body
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('POST', '/login', response)
       assert.strictEqual(typeof token, 'string')
       assert.deepStrictEqual(typed(body), userShape(loginUser))
     })
@@ -115,6 +118,7 @@ describe('Response contract', () => {
       const response = await send('GET', '/users')
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('GET', '/users', response)
       assert.deepStrictEqual(typed(response.body), [userShape(user)])
     })
 
@@ -122,6 +126,7 @@ describe('Response contract', () => {
       const response = await send('GET', `/users/${user.id}`)
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('GET', '/users/{id}', response)
       assert.deepStrictEqual(typed(response.body), userShape(user))
     })
 
@@ -129,6 +134,7 @@ describe('Response contract', () => {
       const response = await send('PUT', `/users/${user.id}`, { title: 'Updated' })
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('PUT', '/users/{id}', response)
       assert.deepStrictEqual(typed(response.body), { ...userShape(user), title: 'Updated' })
     })
   })
@@ -138,6 +144,7 @@ describe('Response contract', () => {
       const response = await send('GET', '/posts')
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('GET', '/posts', response)
       assert.deepStrictEqual(typed(response.body), [postShape(post, { owner: userShape(user) })])
     })
 
@@ -145,6 +152,7 @@ describe('Response contract', () => {
       const response = await send('POST', '/posts', { text: 'New post' })
 
       assert.strictEqual(response.status, 201)
+      assertMatchesSpec('POST', '/posts', response)
       assert.deepStrictEqual(typed(withoutId(response.body)), {
         text: 'New post',
         userId: user.id,
@@ -156,6 +164,7 @@ describe('Response contract', () => {
       const response = await send('GET', `/posts/${post.id}`)
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('GET', '/posts/{id}', response)
       assert.deepStrictEqual(
         typed(response.body),
         postShape(post, {
@@ -169,6 +178,7 @@ describe('Response contract', () => {
       const response = await send('PUT', `/posts/${post.id}`, { text: 'Edited post' })
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('PUT', '/posts/{id}', response)
       assert.deepStrictEqual(typed(response.body), postShape(post, { text: 'Edited post' }))
     })
   })
@@ -178,6 +188,7 @@ describe('Response contract', () => {
       const response = await send('GET', `/posts/${post.id}/comments`)
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('GET', '/posts/{post_id}/comments', response)
       assert.deepStrictEqual(typed(response.body), [commentShape(comment, { owner: userShape(user) })])
     })
 
@@ -185,6 +196,7 @@ describe('Response contract', () => {
       const response = await send('POST', `/posts/${post.id}/comments`, { text: 'New comment' })
 
       assert.strictEqual(response.status, 201)
+      assertMatchesSpec('POST', '/posts/{post_id}/comments', response)
       assert.deepStrictEqual(typed(withoutId(response.body)), {
         text: 'New comment',
         postId: post.id,
@@ -197,6 +209,7 @@ describe('Response contract', () => {
       const response = await send('PUT', `/posts/${post.id}/comments/${comment.id}`, { text: 'Edited comment' })
 
       assert.strictEqual(response.status, 200)
+      assertMatchesSpec('PUT', '/posts/{post_id}/comments/{id}', response)
       assert.deepStrictEqual(typed(response.body), commentShape(comment, { text: 'Edited comment' }))
     })
   })
